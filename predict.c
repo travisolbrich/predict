@@ -5526,20 +5526,20 @@ void MultiTrack()
 				}
 
 				attrset(COLOR_PAIR(4)|A_BOLD);
-				mvprintw(19,5,"   Sun   ");
-				mvprintw(20,5,"---------");
+				mvprintw(17,5,"   Sun   ");
+				mvprintw(18,5,"---------");
 				attrset(COLOR_PAIR(3)|A_BOLD);
-				mvprintw(21,5,"%-7.2fAz",sun_azi);
-				mvprintw(22,4,"%+-6.2f  El",sun_ele);
+				mvprintw(19,5,"%-7.2fAz",sun_azi);
+				mvprintw(20,4,"%+-6.2f  El",sun_ele);
 
 				FindMoon(daynum);
 
 				attrset(COLOR_PAIR(4)|A_BOLD);
-				mvprintw(19,66,"  Moon  ");
-				mvprintw(20,66,"---------");
+				mvprintw(17,66,"  Moon  ");
+				mvprintw(18,66,"---------");
 				attrset(COLOR_PAIR(3)|A_BOLD);
-				mvprintw(21,66,"%-7.2fAz",moon_az);
-				mvprintw(22,65,"%+-6.2f  El",moon_el);
+				mvprintw(19,66,"%-7.2fAz",moon_az);
+				mvprintw(20,65,"%+-6.2f  El",moon_el);
 
 				/* Calculate Next Event (AOS/LOS) Times */
 
@@ -5575,7 +5575,7 @@ void MultiTrack()
 			if (Decayed(indx,0.0))
 			{
 				attrset(COLOR_PAIR(2));
-				mvprintw(y+6,x,"%-10s---------- Decayed ---------", Abbreviate(sat[indx].name,9));
+				mvprintw(y+4,x,"%-10s---------- Decayed ---------", Abbreviate(sat[indx].name,9));
 
 				if (socket_flag)
 				{
@@ -5623,7 +5623,7 @@ void MultiTrack()
 			/* Display list of upcoming passes */
 
 			attrset(COLOR_PAIR(4)|A_BOLD);
-			mvprintw(17,31,"Upcoming-Passes");
+			mvprintw(17,31,"Upcoming Passes");
 			mvprintw(18,31,"---------------");
 			attrset(COLOR_PAIR(3)|A_BOLD);
 
@@ -5653,7 +5653,7 @@ void MultiTrack()
 					//End calculate max pass
 					
 					
-					mvprintw(y+19,19,"%10s +%2i on %s UTC",Abbreviate(sat[(int)satindex[x]].name,9), maxel, Daynum2String(aos2[x]));
+					mvprintw(y+19,17,"%10s +%2i on %s UTC",Abbreviate(sat[(int)satindex[x]].name,9), maxel, Daynum2String(aos2[x]));
 
 					if (z==-1)
 						z=x;
