@@ -37,9 +37,9 @@
 
 #include "predict.h"
 
-/* Constants used by SGP4/SDP4 code */
+/* Constants used by SGP/SGP4/SDP4 code */
 
-#define	km2mi		0.621371		/* km to miles */
+#define	km2mi		0.621371192		/* km to miles */
 #define deg2rad		1.745329251994330E-2	/* Degrees to radians */
 #define pi		3.14159265358979323846	/* Pi */
 #define pio2		1.57079632679489656	/* Pi/2 */
@@ -91,7 +91,7 @@
 #define thdt		4.3752691E-3
 #define rho		1.5696615E-1
 #define mfactor		7.292115E-5
-#define sr		6.96000E5	/* Solar radius - km (IAU 76) */
+#define sr		6.95990E5	/* Solar radius - km (solarscience.nasa.gov) */
 #define AU		1.49597870691E8	/* Astronomical unit - km (IAU 76) */
 
 /* Entry points of Deep() */
@@ -101,16 +101,17 @@
 #define dpper    3 /* Deep-space periodic code       */
 
 /* Flow control flag definitions */
+/*By changing flags around, you can test the other orbital models */
 
 #define ALL_FLAGS              -1
-#define SGP_INITIALIZED_FLAG   0x000001	/* not used */
+#define SGP_INITIALIZED_FLAG   0x000001	/* finished, non-implimented */
 #define SGP4_INITIALIZED_FLAG  0x000002
 #define SDP4_INITIALIZED_FLAG  0x000004
-#define SGP8_INITIALIZED_FLAG  0x000008	/* not used */
+#define SGP8_INITIALIZED_FLAG  0x000008	/* finished, non-implimented */
 #define SDP8_INITIALIZED_FLAG  0x000010	/* not used */
 #define SIMPLE_FLAG            0x000020
 #define DEEP_SPACE_EPHEM_FLAG  0x000040
-#define LUNAR_TERMS_DONE_FLAG  0x000080
+#define LUNAR_TERMS_DONE_FLAG  0x000080 /* will see about updating - 3899 */
 #define NEW_EPHEMERIS_FLAG     0x000100	/* not used */
 #define DO_LOOP_FLAG           0x000200
 #define RESONANCE_FLAG         0x000400
@@ -202,7 +203,7 @@ unsigned short portbase=0;
 /** Type definitions **/
 
 /* Two-line-element satellite orbital data
-   structure used directly by the SGP4/SDP4 code. */
+   structure used directly by the SGP/SGP4/SDP4 code. */
 
 typedef struct	{
 		   double  epoch, xndt2o, xndd6o, bstar, xincl,
@@ -211,19 +212,19 @@ typedef struct	{
  		   char	   sat_name[25], idesg[9];
 		}  tle_t; 
 
-/* Geodetic position structure used by SGP4/SDP4 code. */
+/* Geodetic position structure used by SGP/SGP4/SDP4 code. */
 
 typedef struct	{
 		   double lat, lon, alt, theta;
 		}  geodetic_t;
 
-/* General three-dimensional vector structure used by SGP4/SDP4 code. */
+/* General three-dimensional vector structure used by SGPSGP4/SDP4 code. */
 
 typedef struct	{
 		   double x, y, z, w;
 		}  vector_t;
 
-/* Common arguments between deep-space functions used by SGP4/SDP4 code. */
+/* Common arguments between deep-space functions used by SGP/SGP4/SDP4 code. */
 
 typedef struct	{
 		   	   /* Used by dpinit part of Deep() */
@@ -237,15 +238,15 @@ typedef struct	{
 		   double  ds50;
 		}  deep_arg_t;
 
-/* Global structure used by SGP4/SDP4 code. */
+/* Global structure used by SGP/SGP4/SDP4 code. */
 
 geodetic_t obs_geodetic;
 
-/* Two-line Orbital Elements for the satellite used by SGP4/SDP4 code. */
+/* Two-line Orbital Elements for the satellite used by SGP/SGP4/SDP4 code. */
 
 tle_t tle;
 
-/* Functions for testing and setting/clearing flags used in SGP4/SDP4 code */
+/* Functions for testing and setting/clearing flags used in SGP/SGP4/SDP4 code */
 
 int isFlagSet(int flag)
 {
@@ -267,7 +268,7 @@ void ClearFlag(int flag)
 	Flags&=~flag;
 }
 
-/* Remaining SGP4/SDP4 code follows... */
+/* Remaining SGP/SGP4/SDP4 code follows... */
 
 int Sign(double arg)
 {
@@ -715,10 +716,10 @@ int Sat_Eclipsed(vector_t *pos, vector_t *sol, double *depth)
 
 void select_ephemeris(tle_t *tle)
 {
-	/* Selects the apropriate ephemeris type to be used */
-	/* for predictions according to the data in the TLE */
-	/* It also processes values in the tle set so that  */
-	/* they are apropriate for the sgp4/sdp4 routines   */
+	/* Selects the apropriate ephemeris type to be used   */
+	/* for predictions according to the data in the TLE   */
+	/* It also processes values in the tle set so that    */
+	/* they are apropriate for the sgp/sgp4/sdp4 routines */
 
 	double ao, xnodp, dd1, dd2, delo, temp, a1, del1, r1;
 
@@ -751,6 +752,160 @@ void select_ephemeris(tle_t *tle)
 		SetFlag(DEEP_SPACE_EPHEM_FLAG);
 	else
 		ClearFlag(DEEP_SPACE_EPHEM_FLAG);
+}
+
+void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
+{
+	/* This function is used to calculate the position and velocity */
+	/* of satellites. tsince is time since epoch in minutes, tle is */
+	/* a pointer to a tle_t structure with Keplerian orbital 		*/
+	/* elements and pos and vel are vector_t structures returning   */
+	/* ECI satellite position and velocity. Use Convert_Sat_State() */
+	/* to convert to km and km/s. 									*/
+
+	static double c1, c4, c5, cosio, omgdot, sinio, xnodot;
+
+	double a1, ao, c2, c3, d1, po, qo, xlo, d1o, d2o, d3o, d4o, po2no, 
+	c6, a, e, p, xnodes, omgas, xls, axnsl, aynsl, xl, u, itemp3, eo1, 
+	temp5, sineo1, coseo1, temp2, itemp1, ecose, esine, el2, pl, pl2, 
+	r, rdot, rvdot, temp, sinu, cosu, su, sin2u, cos2u, rk, uk, xnodek, 
+	xinck, sinuk, cosuk, sinnok, cosnok, sinik, cosik, xmx, xmy, 
+	ux, uy, uz, vx, vy, vz;
+
+	/* Initialization */
+	if (isFlagClear(SGP_INITIALIZED_FLAG))
+	{
+		SetFlag(SGP_INITIALIZED_FLAG);
+
+		/* Recover original mean motion (xnodp) and   */
+		/* semimajor axis (aodp) from input elements. */
+		c1=ck2*1.5;
+		c2=ck2/4.0;
+		c3=ck2/2.0;
+		c4=xj3*pow(ae,3)/(4.0*ck2);
+		cosio=cos(tle->xincl);
+		sinio=sin(tle->xincl);
+		a1=pow(xke/tle->xno,tothrd);
+		d1=c1/a1/a1*(3.0*cosio*sinio-1)/pow(1.-tle->eo*tle->eo,1.5);
+		ao=a1*(1.-1./3.*d1-d1*d1-134./81.*d1*d1*d1);
+		po=ao*(1.-tle->eo*tle->eo);
+		qo=ao*(1.-tle->eo);
+		xlo=tle->xmo+tle->omegao+tle->xnodeo;
+		d1o=c3*sinio*cosio;
+		d2o=c2*(7.*cosio*sinio-1.);
+		d3o=c1*cosio;
+		d4o=d3o*sinio;
+		po2no=tle->xno/(po*po);
+		omgdot=c1*po2no*(5.*cosio*cosio-1);
+		xnodot=-2.*d3o*po2no;
+		c5=.5*c4*sinio*(3.+5.*cosio)/(1.+cosio);
+		c6=c4*sinio;
+
+	    ClearFlag(SIMPLE_FLAG);
+
+		/* Update for secular gravity and atmospheric drag. */
+		a=tle->xno+(2.*tle->xndt2o+3.*tle->xndd6o*tsince)*tsince;
+		a=ao*pow(tle->xno/a,tothrd);
+		e=e6a;
+		if (a>qo)
+		{
+				e=1.-qo/a;
+		}
+		p=a*(1.-e*e);
+		xnodes=tle->xnodeo+xnodot*tsince;
+		omgas=tle->omegao+omgdot*tsince;
+		xls=FMod2p(xlo+(tle->xno+omgdot+xnodot+(tle->xndt2o+tle->xndd6o*tsince)*tsince)*tsince);
+		
+		/* Long period periodics */
+		axnsl=e*cos(omgas);
+		aynsl=e*sin(omgas)-c6/p;
+		xl=FMod2p(xls-c5/p*axnsl);
+
+		/* Solve Kepler's Equation */
+		u=FMod2p(xl-xnodes);
+		itemp3=0.;
+		eo1=u;
+		temp5=1.;
+loopsgp:
+		sineo1=sin(eo1);
+		coseo1=cos(eo1);
+		if (fabs(temp5) < e6a)
+		{
+			goto moveonsgp;
+		}
+		else
+		if (itemp3 >= 10.)
+		{
+			goto moveonsgp;
+		}
+		else
+		itemp3=itemp1+1.;
+		temp5=1.-coseo1*axnsl-sineo1*aynsl;
+		temp5=(u-aynsl*coseo1+axnsl*sineo1-eo1)/temp5;
+		temp2=fabs(temp5);
+		if (temp2 > 1.)
+		{
+			temp5=temp2/temp5;
+		}
+		else
+		eo1=eo1+temp5;
+		goto loopsgp;
+
+moveonsgp:
+		/* Short period preliminary quantities */
+		ecose=axnsl*coseo1+aynsl*sineo1;
+		esine=axnsl*sineo1-aynsl*coseo1;
+		el2=axnsl*axnsl+aynsl*aynsl;
+		pl=a*(1.-el2);
+		pl2=pl*pl;
+		r=a*(1.-ecose);
+		rdot=xke*sqrt(a)/r*esine;
+		rvdot=xke*sqrt(pl)/r;
+		temp=esine/(1.+sqrt(1.-el2));
+		sinu=a/r*(sineo1-aynsl-axnsl*temp);
+		cosu=a/r*(coseo1-aynsl+axnsl*temp);
+		su=AcTan(sinu,cosu);
+		
+		/* Update for short periodics */
+		sin2u=(cosu+cosu)*sinu;
+		cos2u=1.-2.*sinu*sinu;
+		rk=r+d1o/pl*cos2u;
+		uk=su-d2o/pl2*sin2u;
+		xnodek=xnodes+d3o*sin2u/pl2;
+		xinck=tle->xincl+d4o/pl2*cos2u;		
+
+		/* Orientation vectors */
+		sinuk=sin(uk);
+		cosuk=cos(uk);
+		sinnok=sin(xnodek);
+		cosnok=cos(xnodek);
+		sinik=sin(xinck);
+		cosik=cos(xinck);
+		xmx=-sinnok*cosik;
+		xmy=cosnok*cosik;
+		ux=xmx*sinuk+cosnok*cosuk;
+		uy=xmy*sinuk+sinnok*cosuk;
+		uz=sinik*sinuk;
+		vx=xmx*cosuk-cosnok*sinuk;
+		vy=xmy*cosuk-sinnok*sinuk;
+		vz=sinik*cosuk;
+
+		/* Position and velocity */
+		pos->x=rk*ux;
+		pos->y=rk*uy;
+		pos->z=rk*uz;
+		vel->x=rdot*ux+rvdot*vx;
+		vel->y=rdot*uy+rvdot*vy;
+		vel->z=rdot*uz+rvdot*vz;
+
+		/* Phase in radians */
+		phase=xl-xnodes-omgas+twopi;
+		
+		if (phase<0.0)
+			phase+=twopi;
+
+		phase=FMod2p(phase);
+	}
 }
 
 void SGP4(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
@@ -1003,6 +1158,293 @@ void SGP4(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		phase+=twopi;
 
 	phase=FMod2p(phase);
+}
+
+void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
+{
+	/* This function is used to calculate the position and velocity */
+	/* of near-earth (period < 225 minutes) satellites. tsince is   */
+	/* time since epoch in minutes, tle is a pointer to a tle_t     */
+	/* structure with Keplerian orbital elements and pos and vel    */
+	/* are vector_t structures returning ECI satellite position and */ 
+	/* velocity. Use Convert_Sat_State() to convert to km and km/s. */
+
+	static double aodp, c1, c4, c5, cosio, d2, d3, d4, eta, 
+	omgdot, sinio, xnodp, xnodot, a1, theta2, tthmun, sinio2, cosio2, 
+	unm5th, unmth2, xgdt1, xmdot1, xhdt1, xlldot, xndt, edot, pp, xnd, 
+	qq, gamma, ed, ovgpp, isimp, i;
+
+	double eosq, betao2, betao, del1, ao, delo, b, po, pom2, sing, 
+	cosg, temp, theta4, a3cof, pardt1, pardt2, pardt4, tsi, eta2, psim2, alpha2, eeta, cos2g, d5, d1, b1, 
+	b2, b3, co, xndtn, d6, d7, d8, c9, c8, d2o, aldtal, 
+	tsdtts, etdt, psdtps, sin2g, codtco, d9, c1dtc1, d1o, d11, d12, 
+	d13, d14, d15, d1dt, d2dt, d3dt, d4dt, d5dt, c4dt, c5dt, d16, xnddt, 
+	eddot, d25, d17, tsddts, etddt, d18, d19, d23, d1ddt, xntrdt, 
+	tmnddt, xmam, omgasm, xnodes, xn, em, z1, z7, zc2, 
+	sine, cose, zc5, cape, am, beta2m, sinos, cosos, axnm, aynm, pm, 
+	g1, g2, g3, beta, g4, g5, snf, csf, snfg, csfg, sn2f2g, cs2f2g, 
+	ecosf, g1o, rm, aovr, g13, g14, dr, diwc, di, sin2du, xlamb, y4, 
+	y5, r, rdot, rvdot, snlamb, cslamb, ux, vx, uz, vz, uy, vy, 
+	temp1;
+ 
+	int iflag;
+
+	/* Initialization */
+
+	if (isFlagClear(SGP8_INITIALIZED_FLAG))
+	{
+		SetFlag(SGP8_INITIALIZED_FLAG);
+
+		/* Recover original mean motion (xnodp) and   */
+		/* semimajor axis (aodp) from input elements. */
+
+		a1=pow(xke/tle->xno,tothrd);
+		cosio=cos(tle->xincl);
+		theta2=cosio*cosio;
+		tthmun=3.*theta2-1.;
+		eosq=tle->eo*tle->eo;
+		betao2=1.-eosq;
+		betao=sqrt(betao2);
+		del1=1.5*ck2*tthmun/(a1*a1*betao*betao2);
+		ao=a1*(1.-del1*(.5*tothrd+del1*(1.+134./81.*del1)));
+		delo=1.5*ck2*tthmun/(ao*ao*betao*betao2);
+		aodp=ao/(1.-delo);
+		xnodp=tle->xno/(1.+delo);
+		b=2.*tle->bstar/rho;
+
+		/* Initialization */
+		isimp=0;
+		po=aodp*betao2;
+		pom2=1./(po*po);
+		sinio=sin(tle->xincl);
+		sing=sin(tle->omegao);
+		cosg=cos(tle->omegao);
+		temp=.5*tle->xincl;
+		sinio2=sin(temp);
+		cosio2=cos(temp);
+		theta4=pow(theta2,2);
+		unm5th=1.-5.*theta2;
+		unmth2=1.-theta2;
+		a3cof=-xj3/ck2*pow(ae,3);
+		pardt1=3.*ck2*pom2*xnodp;
+		pardt2=pardt1*ck2*pom2;
+		pardt4=1.25*ck4*pom2*pom2*xnodp;
+		xmdot1=.5*pardt1*betao*tthmun;
+		xgdt1=-.5*pardt1*unm5th;
+		xhdt1=-pardt1*cosio;
+		xlldot=xnodp+xmdot1+.0625*pardt2*betao*(13.-78.*theta2+137.*theta4);
+		omgdot=xgdt1+.0625*pardt2*(7.-114.*theta2+395.*theta4)+pardt4*(3.-36.*theta2*49.*theta4);
+		xnodot=xhdt1+(.5*pardt2*(4.-19.*theta2)+2.*pardt4*(3.-7.*theta2))*cosio;
+		tsi=1./(po-s);
+		eta=tle->eo*s*tsi;
+		eta2=pow(eta,2);
+		psim2=fabs(1./(1.-eta2));
+		alpha2=1.+eosq;
+		eeta=tle->eo*eta;
+		cos2g=2.*pow(cosg,2)-1;
+		d5=tsi*psim2;
+		d1=d5/po;
+		d2=12.+eta2*(36.+4.5*eta2);
+		d3=eta2*(15.+2.5*eta2);
+		d4=eta*(5.+3.75*eta2);
+		b1=ck2*tthmun;
+		b2=-ck2*unmth2;
+		b3=a3cof*sinio;
+		co=.5*b*rho*qoms2t*xnodp*aodp*pow(tsi,4)*pow(psim2,3.5)/sqrt(alpha2);
+		c1=1.5*xnodp*pow(alpha2,2)*co;
+		c4=d1*d3*b2;
+		c5=d5*d4*b3;
+		xndt=c1*((2.+eta2*(3.+34.*eosq)+5.*eeta*(4.+eta2)+8.5*eosq)+d1*d2*b1+c4*cos2g+c5*sing);
+		xndtn=xndt/xnodp;
+		
+		/* If drag is very small, the isimp flag is set and */
+		/* the equations are truncated to linear variation  */
+		/* in mean motion and quadratic variation in mean   */
+		/* anomaly.											*/
+		if (fabs(xndt*xmnpda)<=2.16E-3)
+		{
+			isimp=1;
+			edot=-tothrd*xndtn*(1.-tle->eo);
+		}
+		else
+		{
+			d6=eta*(30.+22.5*eta2);
+			d7=eta*(5.+12.5*eta2);
+			d8=1.+eta2*(6.75+eta2);
+			c8=d1*d7*b2;
+			c9=d5*d8*b3;
+			edot=-co*(eta*(4.+eta2+eosq*(15.5+7.*eta2))+tle->eo*(5.+15.*eta2)+d1*d6*b1+c8*cos2g+c9*sing);
+			d2o=.5*tothrd*xndtn;
+			aldtal=tle->eo*edot/alpha2;
+			tsdtts=2.*aodp*tsi*(d2o*betao2+tle->eo*edot);
+			etdt=(edot+tle->eo*tsdtts)*tsi*s;
+			psdtps=-eta*etdt*psim2;
+			sin2g=2.*sing*cosg;
+			codtco=d2o+2.*tsdtts-aldtal-7.*psdtps;
+			c1dtc1=xndtn+4.*aldtal+codtco;
+			d9=eta*(6.+68.*eosq)+tle->eo*(20.+15.*eta2);
+			d1o=.5*eta*(4.*eta2)+tle->eo*(17.+68.*eta2);
+			d11=eta*(72.+18.*eta2);
+			d12=eta*(30.+10.*eta2);
+			d13=5.+11.25*eta2;
+			d14=tsdtts-2.*psdtps;
+			d15=2.*(d2o+tle->eo*edot/betao2);
+			d1dt=d1*(d14+d15);
+			d2dt=etdt*d11;
+			d3dt=etdt*d12;
+			d4dt=etdt*d13;
+			d5dt=d5*d14;
+			c4dt=b2*(d1dt*d3+d1*d3dt);
+			c5dt=b3*(d5dt*d4+d5*d4dt);
+			d16=
+				d9*etdt+d1o*edot+
+				b1*(d1dt*d2+d1*d2dt)+
+				c4dt*cos2g+c5dt*sing+xgdt1*(c5*cosg-2.*c4*sin2g);
+			xnddt=c1dtc1*xndt+c1*d16;
+			eddot=codtco*edot-co*(
+				(4.+3.*eta2+30.*eeta+eosq*(15.5+21.*eta2))*etdt+(5.+15.*eta2
+					+eeta*(31.+14.*eta2))*edot+
+				b1*(d1dt*d6+d1*etdt*(30.+67.5*eta2))+
+				b2*(d1dt*d7+d1*etdt*(5.+37.5*eta2))*cos2g+
+				b3*(d5dt*d8+d5*etdt*eta*(13.5+4.*eta2))*sing+xgdt1*(c9*
+					cosg-2.*c8*sin2g));
+			d25=pow(edot,2);
+			d17=xnddt/xnodp-pow(xndtn,2);
+			tsddts=2.*tsdtts*(tsdtts-d2o)+aodp*tsi*(tothrd*betao2*d17-4.*d2o*
+				tle->eo*edot+2.*(d25+tle->eo*eddot));
+			etddt=(eddot+2.*edot*tsdtts)*tsi*s+tsddts*eta;
+			d18=tsddts-pow(tsddts,2);
+			d19=-pow(psdtps,2)/eta2-eta*etddt*psim2-pow(psdtps,2);
+			d23=etdt*etdt;
+			d1ddt=d1dt*(d14+d15)+d1*(d18-2.*d19+tothrd*d17+2.*(alpha2*d25
+				/betao2+tle->eo*eddot)/betao2);
+			xntrdt=xndt*(2.*tothrd*d17+3.*
+				(d25+tle->eo*eddot)/alpha2-6.*pow(aldtal,2)+
+				4.*d18-7.*d19)+
+				c1dtc1*xnddt+c1*(c1dtc1*d16+
+				d9*etddt+d1o*eddot+d23*(6.+30.*eeta+68.*eosq)+
+				etdt*edot*(40.+30.*
+				eta2+272.*eeta)+d25*(17.+68.*eta2)+
+					b1*(d1ddt*d2+2.*d1dt*d2dt+d1*(etddt*d11+d23*(72.+54.*eta2)))+
+					b2*(d1ddt*d3+2.*d1dt*d3dt+d1*(etddt*d12+d23*(30.+30.*eta2)))*
+					cos2g+
+						b3*((d5dt*d14+d5*(d18-2.*d19))*
+				d4+2.*d4dt*d5dt+d5*(etddt*d13+22.5*eta*d23))*sing+xgdt1*
+					((7.*d2o*4.*tle->eo*edot/betao2)*
+					(c5*cosg-2.*c4*sin2g)
+					+((2.*c5dt*cosg-4.*c4dt*sin2g)-xgdt1*(c5*sing+4.*
+					c4*cos2g))));
+			tmnddt=xnddt*1E9;
+			temp=pow(tmnddt,2)-xndt*1.E18*xntrdt;
+			pp=(temp+pow(tmnddt,2))/temp;
+			gamma=-xntrdt/(xnddt*(pp-2.));
+			xnd=xndt/(pp*gamma);
+			qq=1.-eddot/(edot*gamma);
+			ed=edot/(qq*gamma);
+			ovgpp=1./(gamma*(pp+1.));			
+		}
+		iflag=0;
+	}
+		/* Update for secular gravity and atmospheric drag */
+		xmam=FMod2p(tle->xmo+xlldot*tsince);
+		omgasm=tle->omegao+omgdot*tsince;
+		xnodes=tle->xnodeo+xnodot*tsince;
+		if (isimp==1)
+		{
+			xn=xnodp+xndt*tsince;
+			em=tle->eo+edot*tsince;
+			z1=.5*xndt*tsince*tsince;
+		}
+		else
+		{
+			temp=1.-gamma*tsince;
+			temp1=pow(temp,pp);
+			xn=xnodp+xnd*(1.-temp1);
+			em=tle->eo+ed*(1.-pow(temp,qq));
+			z1=xnd*(tsince+ovgpp*(temp*temp1-1));
+		}
+		z7=3.5*tothrd*z1/xnodp;
+		xmam=FMod2p(xmam+z1+z7*xmdot1);
+		omgasm=omgasm+z7*xgdt1;
+		xnodes=xnodes+z7*xhdt1;
+		
+		/* Solve Kepler's Equation */
+		zc2=xmam+em*sin(xmam)*(1.+em*cos(xmam));
+		do
+		{
+			sine=sin(zc2);
+			cose=cos(zc2);
+			zc5=1./(1.-em*cose);
+			cape=(xmam+em*sine-zc2)*zc5+zc2;
+			if (fabs(cape-zc2)<=e6a) break;
+			zc2=cape;
+		}	while (i++<=10);
+		
+		/* Short period preliminary quantities */
+		am=pow(xke/xn,tothrd);
+		beta2m=1.-em*em;
+		sinos=sin(omgasm);
+		cosos=cos(omgasm);
+		axnm=em*cosos;
+		aynm=em*sinos;
+		pm=am*beta2m;
+		g1=1./pm;
+		g2=0.5*ck2*g1;
+		g3=g2*g1;
+		beta=sqrt(beta2m);
+		g4=0.25*a3cof*sinio;
+		g5=0.25*a3cof*g1;
+		snf=beta*sine*zc5;
+		csf=(cose-em)*zc5;
+		fm=AcTan(snf,csf);
+		snfg=snf*cosos+csf*sinos;
+		csfg=csf*cosos-snf*sinos;
+		sn2f2g=2.*snfg*csfg;
+		cs2f2g=2.*pow(csfg,2)-1;
+		ecosf=em*csf;
+		g1o=fm-xmam+em*snf;
+		rm=pm/(1.+ecosf);
+		aovr=am/rm;
+		g13=xn*aovr;
+		g14=-g13*aovr;
+		dr=g2*(unmth2*cs2f2g-3.*tthmun)-g4*snfg;
+		diwc=3.*g3*sinio*cs2f2g-g5*aynm;
+		di=diwc*cosio;
+		
+		/* Update for short period periodics */
+		sin2du=sinio2*(
+			g3*(.5*(1.-7.*theta2)*sn2f2g-3.*unm5th*g1o)-g5*sinio*csfg*(2.+
+			ecosf))-.5*g5*theta2*axnm/cosio2;
+		xlamb=fm+omgasm+xnodes+g3*(.5*(1.+6.*cosio-7.*theta2)*sn2f2g-3.*
+			(unm5th+2.*cosio)*g1o)+g5*sinio*(cosio*axnm/(1.+cosio)-(2.
+			+ecosf)*csfg);
+		y4=sinio2*snfg+csfg*sin2du+.5*snfg*cosio2*di;
+		y5=sinio2*csfg-snfg*sin2du+.5*csfg*cosio2*di;
+		r=rm+dr;
+		rdot=xn*am*em*snf/beta+g14*(2.*g2*unmth2*sn2f2g+g4*csfg);
+		rvdot=xn*pow(am,2)*beta/rm+g14*dr+am*g13*sinio*diwc;
+		
+		/* Orientation vectors */
+		snlamb=sin(xlamb);
+		cslamb=cos(xlamb);
+		temp=2.*(y5*snlamb-y4*cslamb);
+		ux=y4*temp+cslamb;
+		vx=y5*temp-snlamb;
+		temp=2.*(y5*cslamb+y4*snlamb);
+		uy=-y4*temp+snlamb;
+		vy=-y5*temp-cslamb;
+		temp=2.*sqrt(1.-y4*y4-y5*y5);
+		uz=y4*temp;
+		vz=y5*temp;		
+		
+		/* Position and velocity */
+		pos->x=r*ux;
+		pos->y=r*uy;
+		pos->z=r*uz;
+		vel->x=rdot*ux+rvdot*vx;
+		vel->y=rdot*uy+rvdot*vy;
+		vel->z=rdot*uz+rvdot*vz;
+
 }
 
 void Deep(int ientry, tle_t * tle, deep_arg_t * deep_arg)
@@ -1938,7 +2380,7 @@ void Calculate_RADec(double time, vector_t *pos, vector_t *vel, geodetic_t *geod
 	obs_set->x=FMod2p(obs_set->x);
 }
 
-/* .... SGP4/SDP4 functions end .... */
+/* .... SGP/SGP4/SDP4 functions end .... */
 
 void bailout(string)
 char *string;
@@ -3690,7 +4132,7 @@ void PreCalc(x)
 int x;
 {
 	/* This function copies TLE data from PREDICT's sat structure
-	   to the SGP4/SDP4's single dimensioned tle structure, and
+	   to the SGP/SGP4/SDP4's single dimensioned tle structure, and
 	   prepares the tracking code for the update. */
 
 	strcpy(tle.sat_name,sat[x].name);
@@ -3724,7 +4166,7 @@ int x;
 	/* Select ephemeris type.  This function will set or clear the
 	   DEEP_SPACE_EPHEM_FLAG depending on the TLE parameters of the
 	   satellite.  It will also pre-process tle members for the
-	   ephemeris functions SGP4 or SDP4, so this function must
+	   ephemeris functions SGP, SGP4 or SDP4, so this function must
 	   be called each time a new tle set is used. */
 
 	select_ephemeris(&tle);
@@ -5653,7 +6095,7 @@ void MultiTrack()
 					//End calculate max pass
 					
 					
-					mvprintw(y+19,17,"%10s +%2i on %s UTC",Abbreviate(sat[(int)satindex[x]].name,9), maxel, Daynum2String(aos2[x]));
+					mvprintw(y+19,17,"%10s  +%2i on %s UTC",Abbreviate(sat[(int)satindex[x]].name,9), maxel, Daynum2String(aos2[x]));
 
 					if (z==-1)
 						z=x;
