@@ -37,7 +37,7 @@
 
 #include "predict.h"
 
-/* Constants used by SGP/SGP4/SDP4 code */
+/* Constants used by SGP/SGP4/SDP4/SGP8 code */
 
 #define	km2mi		0.621371192		/* km to miles */
 #define deg2rad		1.745329251994330E-2	/* Degrees to radians */
@@ -204,7 +204,7 @@ unsigned short portbase=0;
 /** Type definitions **/
 
 /* Two-line-element satellite orbital data
-   structure used directly by the SGP/SGP4/SDP4 code. */
+   structure used directly by the SGP/SGP4/SDP4/SGP8 code. */
 
 typedef struct	{
 		   double  epoch, xndt2o, xndd6o, bstar, xincl,
@@ -213,19 +213,19 @@ typedef struct	{
  		   char	   sat_name[25], idesg[9];
 		}  tle_t; 
 
-/* Geodetic position structure used by SGP/SGP4/SDP4 code. */
+/* Geodetic position structure used by SGP/SGP4/SDP4/SGP8 code. */
 
 typedef struct	{
 		   double lat, lon, alt, theta;
 		}  geodetic_t;
 
-/* General three-dimensional vector structure used by SGPSGP4/SDP4 code. */
+/* General three-dimensional vector structure used by SGP/SGP4/SDP4/SGP8 code. */
 
 typedef struct	{
 		   double x, y, z, w;
 		}  vector_t;
 
-/* Common arguments between deep-space functions used by SGP/SGP4/SDP4 code. */
+/* Common arguments between deep-space functions used by SGP/SGP4/SDP4/SGP8 code. */
 
 typedef struct	{
 		   	   /* Used by dpinit part of Deep() */
@@ -239,15 +239,15 @@ typedef struct	{
 		   double  ds50;
 		}  deep_arg_t;
 
-/* Global structure used by SGP/SGP4/SDP4 code. */
+/* Global structure used by SGP/SGP4/SDP4/SGP8 code. */
 
 geodetic_t obs_geodetic;
 
-/* Two-line Orbital Elements for the satellite used by SGP/SGP4/SDP4 code. */
+/* Two-line Orbital Elements for the satellite used by SGP/SGP4/SDP4/SGP8 code. */
 
 tle_t tle;
 
-/* Functions for testing and setting/clearing flags used in SGP/SGP4/SDP4 code */
+/* Functions for testing and setting/clearing flags used in SGP/SGP4/SDP4/SGP8 code */
 
 int isFlagSet(int flag)
 {
@@ -269,7 +269,7 @@ void ClearFlag(int flag)
 	Flags&=~flag;
 }
 
-/* Remaining SGP/SGP4/SDP4 code follows... */
+/* Remaining SGP/SGP4/SDP4/SGP8 code follows... */
 
 int Sign(double arg)
 {
@@ -720,7 +720,8 @@ void select_ephemeris(tle_t *tle)
 	/* Selects the apropriate ephemeris type to be used   */
 	/* for predictions according to the data in the TLE   */
 	/* It also processes values in the tle set so that    */
-	/* they are apropriate for the sgp/sgp4/sdp4 routines */
+	/* they are apropriate for the sgp/sgp4/sdp4/sgp8	  */
+	/* routines 										  */
 
 	double ao, xnodp, dd1, dd2, delo, temp, a1, del1, r1;
 
@@ -2381,7 +2382,7 @@ void Calculate_RADec(double time, vector_t *pos, vector_t *vel, geodetic_t *geod
 	obs_set->x=FMod2p(obs_set->x);
 }
 
-/* .... SGP/SGP4/SDP4 functions end .... */
+/* .... SGP/SGP4/SDP4/SGP8 functions end .... */
 
 void bailout(string)
 char *string;
@@ -4139,8 +4140,8 @@ void PreCalc(x)
 int x;
 {
 	/* This function copies TLE data from PREDICT's sat structure
-	   to the SGP/SGP4/SDP4's single dimensioned tle structure, and
-	   prepares the tracking code for the update. */
+	   to the SGP/SGP4/SDP4/SGP8's single dimensioned tle structure, 
+	   and prepares the tracking code for the update. */
 
 	strcpy(tle.sat_name,sat[x].name);
 	strcpy(tle.idesg,sat[x].designator);
@@ -6117,7 +6118,7 @@ void MultiTrack()
 					//End calculate max pass
 					
 					
-					mvprintw(y+19,17,"%10s  +%2i on %s UTC",Abbreviate(sat[(int)satindex[x]].name,9), maxel, Daynum2String(aos2[x]));
+					mvprintw(y+19,17,"%10s +%2i on %s UTC",Abbreviate(sat[(int)satindex[x]].name,9), maxel, Daynum2String(aos2[x]));
 
 					if (z==-1)
 						z=x;
