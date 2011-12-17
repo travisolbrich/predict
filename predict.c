@@ -144,6 +144,7 @@ struct	{  char callsign[17];
 	   double stnlat;
 	   double stnlong;
 	   int stnalt;
+	   int mode;
 	}  qth;
 
 struct	{  char name[25];
@@ -3163,6 +3164,7 @@ char ReadDataFiles()
 		fscanf(fd,"%lf", &qth.stnlat);
 		fscanf(fd,"%lf", &qth.stnlong);
 		fscanf(fd,"%d", &qth.stnalt);
+		fscanf(fd,"%d", &qth.mode); 
 		fclose(fd);
 
 		obs_geodetic.lat=qth.stnlat*deg2rad;
@@ -3396,7 +3398,11 @@ char *destination;
 void SaveQTH()
 {
 	/* This function saves QTH data to the QTH data file. */
-
+	
+	//Catch a bad mode
+	if(qth.mode>3||qth.mode<0)
+		qth.mode = 1;
+	
 	FILE *fd;	
 
 	fd=fopen(qthfile,"w");
@@ -3405,6 +3411,7 @@ void SaveQTH()
 	fprintf(fd," %g\n",qth.stnlat);
 	fprintf(fd," %g\n",qth.stnlong);
 	fprintf(fd," %d\n",qth.stnalt);
+	fprintf(fd," %d\n",qth.mode);
 
 	fclose(fd);
 }
@@ -5235,25 +5242,28 @@ void QthEdit()
 	mvprintw(7,0,"\t\t *  Ground Station Location Editing Utility  *\n\n\n");
 
 	attrset(COLOR_PAIR(4)|A_BOLD);
-	printw("\n\t\t\tStation Callsign  :");
-	printw("\n\t\t\tStation Latitude  :");
-	printw("\n\t\t\tStation Longitude :");
-	printw("\n\t\t\tStation Altitude  :");
+	printw("\n\t\t      Station Callsign   :");
+	printw("\n\t\t      Station Latitude   :");
+	printw("\n\t\t      Station Longitude  :");
+	printw("\n\t\t      Station Altitude   :");
+	printw("\n\t\t      Perturbation Model :");
 
 	attrset(COLOR_PAIR(2)|A_BOLD);
-	mvprintw(11,44,"%s",qth.callsign);
+	mvprintw(11,43,"%s",qth.callsign);
 
 	if (io_lat=='N')
-		mvprintw(12,44,"%g [DegN]",+qth.stnlat);
+		mvprintw(12,43,"%g [DegN]",+qth.stnlat);
 	else
-		mvprintw(12,44,"%g [DegS]",-qth.stnlat);
+		mvprintw(12,43,"%g [DegS]",-qth.stnlat);
 
 	if (io_lon=='W')
-		mvprintw(13,44,"%g [DegW]",+qth.stnlong);
+		mvprintw(13,43,"%g [DegW]",+qth.stnlong);
 	else
-		mvprintw(13,44,"%g [DegE]",-qth.stnlong);
+		mvprintw(13,43,"%g [DegE]",-qth.stnlong);
 
-	mvprintw(14,44,"%d [m]",qth.stnalt);
+	mvprintw(14,43,"%d [m]",qth.stnalt);
+	
+	mvprintw(15,43,"%d",qth.mode);
 
 	refresh();
 
@@ -5261,7 +5271,7 @@ void QthEdit()
 
 	mvprintw(18,12,"Enter the callsign or identifier of your ground station");
 
-	if (KbEdit(45,12))
+	if (KbEdit(44,12))
 		strncpy(qth.callsign,temp,16);
 
 	if (io_lat=='N')
@@ -5276,7 +5286,7 @@ void QthEdit()
  
 	mvprintw(19,12,"  Decimal (74.2467) or DMS (74 14 48) format allowed");
 
-	if (KbEdit(45,13))
+	if (KbEdit(44,13))
 	{
 		if (io_lat=='N')
 			qth.stnlat=+ReadBearing(temp);
@@ -5294,22 +5304,34 @@ void QthEdit()
 	else
 		mvprintw(18,12,"Enter your longitude in degrees EAST   (west=negative) ");
  
-	if (KbEdit(45,14))
+	if (KbEdit(44,14))
 	{
 		if (io_lon=='W')
 			qth.stnlong=+ReadBearing(temp);
 		else
 			qth.stnlong=-ReadBearing(temp);
 	}
- 
+	
+
 	move(19,12);
 	clrtoeol();
 	mvprintw(18,12,"    Enter your altitude above sea level (in meters)   ");
 
 	sprintf(temp,"%d",qth.stnalt);
 
-	if (KbEdit(45,15))
+	if (KbEdit(44,15))
 		sscanf(temp,"%d",&qth.stnalt);
+		
+	move(18,12);
+	clrtoeol();
+		
+	sprintf(temp,"%d",qth.mode);
+
+	mvprintw(18,20, "  Enter the perturbation mode to use.");
+	mvprintw(19,20, "0 = SGP   1 = SGP4/SDP4   2 = SGP8/SDP8");
+
+	if (KbEdit(44,16))
+		sscanf(temp, "%d",&qth.mode);
 
 	if (resave)
 	{
