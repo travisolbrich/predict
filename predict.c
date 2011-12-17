@@ -108,10 +108,10 @@
 #define SGP4_INITIALIZED_FLAG  0x000002
 #define SDP4_INITIALIZED_FLAG  0x000004
 #define SGP8_INITIALIZED_FLAG  0x000008	/* finished, non-implimented */
-#define SDP8_INITIALIZED_FLAG  0x000010	/* not used */
+#define SDP8_INITIALIZED_FLAG  0x000010	/* finished, non-implimented */
 #define SIMPLE_FLAG            0x000020
 #define DEEP_SPACE_EPHEM_FLAG  0x000040
-#define LUNAR_TERMS_DONE_FLAG  0x000080 /* will see about updating - 3899 */
+#define LUNAR_TERMS_DONE_FLAG  0x000080 /* will see about updating - FindMoon */
 #define NEW_EPHEMERIS_FLAG     0x000100	/* not used */
 #define DO_LOOP_FLAG           0x000200
 #define RESONANCE_FLAG         0x000400
@@ -204,7 +204,7 @@ unsigned short portbase=0;
 /** Type definitions **/
 
 /* Two-line-element satellite orbital data
-   structure used directly by the SGP/SGP4/SDP4/SGP8 code. */
+   structure used directly by the SGP/SGP4/SDP4/SGP8/SDP8 code. */
 
 typedef struct	{
 		   double  epoch, xndt2o, xndd6o, bstar, xincl,
@@ -213,19 +213,19 @@ typedef struct	{
  		   char	   sat_name[25], idesg[9];
 		}  tle_t; 
 
-/* Geodetic position structure used by SGP/SGP4/SDP4/SGP8 code. */
+/* Geodetic position structure used by SGP/SGP4/SDP4/SGP8/SDP8 code. */
 
 typedef struct	{
 		   double lat, lon, alt, theta;
 		}  geodetic_t;
 
-/* General three-dimensional vector structure used by SGP/SGP4/SDP4/SGP8 code. */
+/* General three-dimensional vector structure used by SGP/SGP4/SDP4/SGP8/SDP8 code. */
 
 typedef struct	{
 		   double x, y, z, w;
 		}  vector_t;
 
-/* Common arguments between deep-space functions used by SGP/SGP4/SDP4/SGP8 code. */
+/* Common arguments between deep-space functions used by SGP/SGP4/SDP4/SGP8/SDP8 code. */
 
 typedef struct	{
 		   	   /* Used by dpinit part of Deep() */
@@ -239,15 +239,15 @@ typedef struct	{
 		   double  ds50;
 		}  deep_arg_t;
 
-/* Global structure used by SGP/SGP4/SDP4/SGP8 code. */
+/* Global structure used by SGP/SGP4/SDP4/SGP8/SDP8 code. */
 
 geodetic_t obs_geodetic;
 
-/* Two-line Orbital Elements for the satellite used by SGP/SGP4/SDP4/SGP8 code. */
+/* Two-line Orbital Elements for the satellite used by SGP/SGP4/SDP4/SGP8/SDP8 code. */
 
 tle_t tle;
 
-/* Functions for testing and setting/clearing flags used in SGP/SGP4/SDP4/SGP8 code */
+/* Functions for testing and setting/clearing flags used in SGP/SGP4/SDP4/SGP8/SDP8 code */
 
 int isFlagSet(int flag)
 {
@@ -269,7 +269,7 @@ void ClearFlag(int flag)
 	Flags&=~flag;
 }
 
-/* Remaining SGP/SGP4/SDP4/SGP8 code follows... */
+/* Remaining SGP/SGP4/SDP4/SGP8/SDP8 code follows... */
 
 int Sign(double arg)
 {
@@ -720,8 +720,8 @@ void select_ephemeris(tle_t *tle)
 	/* Selects the apropriate ephemeris type to be used   */
 	/* for predictions according to the data in the TLE   */
 	/* It also processes values in the tle set so that    */
-	/* they are apropriate for the sgp/sgp4/sdp4/sgp8	  */
-	/* routines 										  */
+	/* they are apropriate for the sgp/sgp4/sdp4/sgp8/    */
+	/* sdp8 routines 									  */
 
 	double ao, xnodp, dd1, dd2, delo, temp, a1, del1, r1;
 
@@ -1177,17 +1177,16 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	qq, gamma, ed, ovgpp, isimp, i;
 
 	double eosq, betao2, betao, del1, ao, delo, b, po, pom2, sing, 
-	cosg, temp, theta4, a3cof, pardt1, pardt2, pardt4, tsi, eta2, psim2, alpha2, eeta, cos2g, d5, d1, b1, 
-	b2, b3, co, xndtn, d6, d7, d8, c9, c8, d2o, aldtal, 
-	tsdtts, etdt, psdtps, sin2g, codtco, d9, c1dtc1, d1o, d11, d12, 
-	d13, d14, d15, d1dt, d2dt, d3dt, d4dt, d5dt, c4dt, c5dt, d16, xnddt, 
-	eddot, d25, d17, tsddts, etddt, d18, d19, d23, d1ddt, xntrdt, 
-	tmnddt, xmam, omgasm, xnodes, xn, em, z1, z7, zc2, 
+	cosg, temp, theta4, a3cof, pardt1, pardt2, pardt4, tsi, eta2, psim2, 
+	alpha2, eeta, cos2g, d5, d1, b1, b2, b3, co, xndtn, d6, d7, d8, c9, 
+	c8, d2o, aldtal, tsdtts, etdt, psdtps, sin2g, codtco, d9, c1dtc1, 
+	d1o, d11, d12, d13, d14, d15, d1dt, d2dt, d3dt, d4dt, d5dt, c4dt, 
+	c5dt, d16, xnddt, eddot, d25, d17, tsddts, etddt, d18, d19, d23, 
+	d1ddt, xntrdt, tmnddt, xmam, omgasm, xnodes, xn, em, z1, z7, zc2, 
 	sine, cose, zc5, cape, am, beta2m, sinos, cosos, axnm, aynm, pm, 
 	g1, g2, g3, beta, g4, g5, snf, csf, snfg, csfg, sn2f2g, cs2f2g, 
 	ecosf, g1o, rm, aovr, g13, g14, dr, diwc, di, sin2du, xlamb, y4, 
-	y5, r, rdot, rvdot, snlamb, cslamb, ux, vx, uz, vz, uy, vy, 
-	temp1;
+	y5, r, rdot, rvdot, snlamb, cslamb, ux, vx, uz, vz, uy, vy, temp1;
  
 	int iflag;
 
@@ -2196,6 +2195,233 @@ void SDP4(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	phase=FMod2p(phase);
 }
 
+void SDP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
+{
+	/* This function is used to calculate the position and velocity */
+	/* of deep-space (period > 225 minutes) satellites. tsince is   */
+	/* time since epoch in minutes, tle is a pointer to a tle_t     */
+	/* structure with Keplerian orbital elements and pos and vel    */
+	/* are vector_t structures returning ECI satellite position and */
+	/* velocity. Use Convert_Sat_State() to convert to km and km/s. */
+
+	int i, iflag;
+
+	static double c1, c4, tthmun, sinio2, cosio2, unm5th, unmth2, 
+	xgdot1, xhdot1, xlldot, xndot, edot;
+
+	double a1, del1, ao, delo, b, po, pom2, a3cof, pardt1, pardt2, 
+	pardt4, eta2, psim2, alpha2, cos2g, d5, d1, d2, d3, d4, b1, b2, b3, 
+	co, c5, xndotn, z1, z7, xmamdf, omgasm, xnodes, zc2, sine, cose, 
+	zc5, cape, am, beta2m, sinos, cosos, axnm, aynm, pm, g1, g2, g3, 
+	g4, g5, snf, csf, snfg, csfg, sn2f2g, cs2f2g, ecosf, g1o, rm, aovr, 
+	g13, g14, dr, diwc, di, sini2, sni2du, xlamb, y4, y5, rvdot, cslamb, 
+	tsi, eta, eeta, xmam, beta, r, rdot, snlamb, ux, vx, uy, vy, uz, vz, 
+	theta4, temp;
+
+	static deep_arg_t deep_arg;
+
+	/* Initialization */
+
+	if (isFlagClear(SDP8_INITIALIZED_FLAG))
+	{
+		SetFlag(SDP8_INITIALIZED_FLAG);
+
+		/* Recover original mean motion (xnodp) and   */
+		/* semimajor axis (aodp) from input elements. */
+		/* Calculate ballistic coefficient (b term)   */
+		/* from input b* drag term.					  */
+		a1=pow(xke/tle->xno,tothrd);
+		deep_arg.cosio=cos(tle->xincl);
+		deep_arg.theta2=deep_arg.cosio*deep_arg.cosio;
+		tthmun=3.*deep_arg.theta2-1.;
+		deep_arg.eosq=tle->eo*tle->eo;
+		deep_arg.betao2=1.-deep_arg.eosq;
+		deep_arg.betao=sqrt(deep_arg.betao2);
+		del1=1.5*ck2*tthmun/(a1*a1*deep_arg.betao*deep_arg.betao2);
+		ao=a1*(1.-del1*(.5*tothrd+del1*(1.+134./81.*del1)));
+		delo=1.5*ck2*tthmun/(ao*ao*deep_arg.betao*deep_arg.betao2);
+		deep_arg.aodp=ao/(1.-delo);
+		deep_arg.xnodp=tle->xno/(1.+delo);
+		b=2.*tle->bstar/rho;
+
+		/* Initialization */
+		po=deep_arg.aodp*deep_arg.betao2;
+		pom2=1./(po*po);
+		deep_arg.sinio=sin(tle->xincl);
+		deep_arg.sing=sin(tle->omegao);
+		deep_arg.cosg=cos(tle->omegao);
+		temp=.5*tle->xincl;
+		sinio2=sin(temp);
+		cosio2=cos(temp);
+		theta4=pow(deep_arg.theta2,2);
+		unm5th=1.-5.*deep_arg.theta2;
+		unmth2=1.-deep_arg.theta2;
+		a3cof=-xj3/ck2*pow(ae,3);
+		pardt1=3.*ck2*pom2*deep_arg.xnodp;
+		pardt2=pardt1*ck2*pom2;
+		pardt4=1.25*ck4*pom2*pom2*deep_arg.xnodp;
+		deep_arg.xmdot=.5*pardt1*deep_arg.betao*tthmun;
+		xgdot1=-.5*pardt1*unm5th;
+		xhdot1=-pardt1*deep_arg.cosio;
+		xlldot=deep_arg.xnodp+deep_arg.xmdot+
+			.0625*pardt2*deep_arg.betao*(13.-78.*deep_arg.theta2+137.*theta4);
+		deep_arg.omgdot=xgdot1+
+			.0625*pardt2*(7.-114.*deep_arg.theta2+395.*theta4)+pardt4*(3.-36.*
+				deep_arg.theta2+49.*theta4);
+		deep_arg.xnodot=xhdot1+
+			(.5*pardt2*(4.-19.*deep_arg.theta2)+2.*pardt4*(3.-7.*deep_arg.theta2))*deep_arg.cosio;
+		tsi=1./(po-s);
+		eta=tle->eo*s*tsi;
+		eta2=pow(eta,2);
+		psim2=fabs(1./(1.-eta2));
+		alpha2=1.+deep_arg.eosq;
+		eeta=tle->eo*eta;
+		cos2g=2.*pow(deep_arg.cosg,2)-1.;
+		d5=tsi*psim2;
+		d1=d5/po;
+		d2=12.+eta2*(36.+4.5*eta2);
+		d3=eta2*(15.+2.5*eta2);
+		d4=eta*(5.+3.75*eta2);
+		b1=ck2*tthmun;
+		b2=-ck2*unmth2;
+		b3=a3cof*deep_arg.sinio;
+		co=.5*b*rho*qoms2t*deep_arg.xnodp*deep_arg.aodp*pow(tsi,4)*pow(psim2,2.5)/sqrt(alpha2);
+		c1=1.5*deep_arg.xnodp*pow(alpha2,2)*co;
+		c4=d1*d3*b2;
+		c5=d5*d4*b3;
+		xndot=c1*(
+			(2.+eta2*(2.+34.*deep_arg.eosq)+5.*eeta*(4.+eta2)+8.5*deep_arg.eosq)+
+			d1*d2*b1+c4*cos2g+c5*deep_arg.sing);
+		xndotn=xndot/deep_arg.xnodp;
+		edot=-tothrd*xndotn*(1.-tle->eo);
+		iflag=0;		
+		
+		/* initialize Deep() */
+
+		Deep(dpinit,tle,&deep_arg);
+	}
+
+	/* Update for secular gravity and atmospheric drag */
+	z1=.5*xndot*tsince*tsince;
+	z7=3.5*tothrd*z1/deep_arg.xnodp;
+	xmamdf=tle->xmo+xlldot*tsince;
+	omgasm=tle->omegao+deep_arg.omgdot*tsince+z7*xgdot1;
+	xnodes=tle->xnodeo+deep_arg.xnodot*tsince+z7*xhdot1;
+	deep_arg.xn=deep_arg.xnodp;
+	Deep(dpsec,tle,&deep_arg);
+	deep_arg.xn=deep_arg.xn+xndot*tsince;
+	deep_arg.em=deep_arg.em+edot*tsince;
+	xmam=xmamdf+z1+z7*deep_arg.xmdot;
+	Deep(dpper,tle,&deep_arg);
+	xmam=FMod2p(xmam);
+
+	/* Solve Kepler's Equation */
+	zc2=xmam+deep_arg.em*sin(xmam)*(1.+deep_arg.em*cos(xmam));
+	i=0;
+	do
+	{
+		sine=sin(zc2);
+		cose=cos(zc2);
+		zc5=1./(1.-deep_arg.em*cose);
+		cape=(xmam+deep_arg.em*sine-zc2)*
+			zc5+zc2;
+		if (fabs(cape-zc2)<=e6a)
+			break;
+		zc2=cape;
+	} while (i++<10);
+
+	/* Short period preliminary quantities */
+	am=pow(xke/deep_arg.xn,tothrd);
+	beta2m=1.-deep_arg.em*deep_arg.em;
+	sinos=sin(omgasm);
+	cosos=cos(omgasm);
+	axnm=deep_arg.em*cosos;
+	aynm=deep_arg.em*sinos;
+	pm=am*beta2m;
+	g1=1./pm;
+	g2=.5*ck2*g1;
+	g3=g2*g1;
+	beta=sqrt(beta2m);
+	g4=.25*a3cof*deep_arg.sinio;
+	g5=.25*a3cof*g1;
+	snf=beta*sine*zc5;
+	csf=(cose-deep_arg.em)*zc5;
+	fm=AcTan(snf,csf);
+	snfg=snf*cosos+csf*sinos;
+	csfg=csf*cosos-snf*sinos;
+	sn2f2g=2.*snfg*csfg;
+	cs2f2g=2.*pow(csfg,2)-1.;
+	ecosf=deep_arg.em*csf;
+	g1o=fm-xmam+deep_arg.em*snf;
+	rm=pm/(1.+ecosf);
+	aovr=am/rm;
+	g13=deep_arg.xn*aovr;
+	g14=-g13*aovr;
+	dr=g2*(unmth2*cs2f2g-2.*tthmun)-g4*snfg;
+	diwc=2.*g3*deep_arg.sinio*cs2f2g-g5*aynm;
+	di=diwc*deep_arg.cosio;
+	sini2=sin(.5*tle->xincl);
+	
+	/* Update for short periodics */
+	sni2du=sinio2*(
+		g3*(.5*(1.-7.*deep_arg.theta2)*sn2f2g-3.*unm5th*g1o)-g5*deep_arg.sinio*csfg*(2.+
+			ecosf))-.5*g5*deep_arg.theta2*axnm/cosio2;
+	xlamb=fm+omgasm+xnodes+g3*(.5*(1.+6.*deep_arg.cosio-7.*deep_arg.theta2)*sn2f2g-3.*
+		(unm5th+2.*deep_arg.cosio)*g1o)+g5*deep_arg.sinio*(deep_arg.cosio*axnm/(1.+deep_arg.cosio)-(2.
+		+ecosf)*csfg);
+	y4=sini2*snfg+csfg*sni2du+.5*snfg*cosio2*di;
+	y5=sini2*csfg-snfg*sni2du+.5*csfg*cosio2*di;
+	r=rm+dr;
+	rdot=deep_arg.xn*am*deep_arg.em*snf/beta+g14*(2.*g2*unmth2*sn2f2g+g4*csfg);
+	rvdot=deep_arg.xn*pow(am,2)*beta/rm+
+		g14*dr+am*g14*deep_arg.sinio*diwc;
+	
+	/* Orientation vectors */
+	snlamb=sin(xlamb);
+	cslamb=cos(xlamb);
+	temp=2.*(y5*snlamb-y4*cslamb);
+	ux=y4*temp+cslamb;
+	vx=y5*temp-snlamb;
+	temp=2.*(y5*cslamb-y4*snlamb);
+	uy=-y4*temp+snlamb;
+	vy=-y5*temp+cslamb;
+	temp=2.*sqrt(1.-y4*y4-y5*y5);
+	uz=y4*temp;
+	vz=y5*temp;
+
+	/* Position and velocity */
+	pos->x=r*ux;
+	pos->y=r*uy;
+	pos->z=r*uz;
+	vel->x=rdot*ux+rvdot*vx;
+	vel->y=rdot*uy+rvdot*vy;
+	vel->z=rdot*uz+rvdot*vz;
+
+	/* Calculations for squint angle begin here... */
+/*
+	if (calc_squint)
+	{
+		bx=cos(alat)*cos(alon+deep_arg.omgadf);
+		by=cos(alat)*sin(alon+deep_arg.omgadf);
+		bz=sin(alat);
+		cx=bx;
+		cy=by*cos(xinck)-bz*sin(xinck);
+		cz=by*sin(xinck)+bz*cos(xinck);
+		ax=cx*cos(xnodek)-cy*sin(xnodek);
+		ay=cx*sin(xnodek)+cy*cos(xnodek);
+		az=cz;
+	}
+*/	
+	/* Phase in radians */
+/*	phase=xlt-deep_arg.xnode-deep_arg.omgadf+twopi;
+    
+	if (phase<0.0)
+		phase+=twopi;
+
+	phase=FMod2p(phase);
+*/
+}
+
 void Calculate_User_PosVel(double time, geodetic_t *geodetic, vector_t *obs_pos, vector_t *obs_vel)
 {
 	/* Calculate_User_PosVel() passes the user's geodetic position
@@ -2382,7 +2608,7 @@ void Calculate_RADec(double time, vector_t *pos, vector_t *vel, geodetic_t *geod
 	obs_set->x=FMod2p(obs_set->x);
 }
 
-/* .... SGP/SGP4/SDP4/SGP8 functions end .... */
+/* .... SGP/SGP4/SDP4/SGP8/SDP8 functions end .... */
 
 void bailout(string)
 char *string;
@@ -4140,8 +4366,8 @@ void PreCalc(x)
 int x;
 {
 	/* This function copies TLE data from PREDICT's sat structure
-	   to the SGP/SGP4/SDP4/SGP8's single dimensioned tle structure, 
-	   and prepares the tracking code for the update. */
+	   to the SGP/SGP4/SDP4/SGP8/SDP8's single dimensioned tle 
+	   structure, and prepares the tracking code for the update. */
 
 	strcpy(tle.sat_name,sat[x].name);
 	strcpy(tle.idesg,sat[x].designator);
