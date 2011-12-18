@@ -765,9 +765,9 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	/* ECI satellite position and velocity. Use Convert_Sat_State() */
 	/* to convert to km and km/s. 									*/
 
-	static double c1, c4, c5, cosio, omgdot, sinio, xnodot;
+	static double c1, c4, c5, sinio, cosio, omgdot, xnodot;
 
-	double a1, ao, c2, c3, d1, po, qo, xlo, d1o, d2o, d3o, d4o, po2no, 
+	double c2, c3, a1, ao, d1, po, qo, xlo, d1o, d2o, d3o, d4o, po2no, 
 	c6, a, e, p, xnodes, omgas, xls, axnsl, aynsl, xl, u, itemp3, eo1, 
 	temp5, sineo1, coseo1, temp2, itemp1, ecose, esine, el2, pl, pl2, 
 	r, rdot, rvdot, temp, sinu, cosu, su, sin2u, cos2u, rk, uk, xnodek, 
@@ -1174,7 +1174,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	static double aodp, c1, c4, c5, cosio, d2, d3, d4, eta, 
 	omgdot, sinio, xnodp, xnodot, a1, theta2, tthmun, sinio2, cosio2, 
 	unm5th, unmth2, xgdt1, xmdot1, xhdt1, xlldot, xndt, edot, pp, xnd, 
-	qq, gamma, ed, ovgpp, isimp, i;
+	qq, gamma, ed, ovgpp, i, isimp;
 
 	double eosq, betao2, betao, del1, ao, delo, b, po, pom2, sing, 
 	cosg, temp, theta4, a3cof, pardt1, pardt2, pardt4, tsi, eta2, psim2, 
@@ -2398,8 +2398,8 @@ void SDP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	vel->z=rdot*uz+rvdot*vz;
 
 	/* Calculations for squint angle begin here... */
-/*
-	if (calc_squint)
+
+/*	if (calc_squint)
 	{
 		bx=cos(alat)*cos(alon+deep_arg.omgadf);
 		by=cos(alat)*sin(alon+deep_arg.omgadf);
@@ -2411,8 +2411,8 @@ void SDP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		ay=cx*sin(xnodek)+cy*cos(xnodek);
 		az=cz;
 	}
-*/	
-	/* Phase in radians */
+	
+*/	/* Phase in radians */
 /*	phase=xlt-deep_arg.xnode-deep_arg.omgadf+twopi;
     
 	if (phase<0.0)
