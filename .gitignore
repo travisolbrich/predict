@@ -1,0 +1,4 @@
+predict.o
+predict.h
+*.lsm
+predict
