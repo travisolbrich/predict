@@ -828,32 +828,32 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		itemp3=0.;
 		eo1=u;
 		temp5=1.;
-loopsgp:
-		sineo1=sin(eo1);
-		coseo1=cos(eo1);
-		if (fabs(temp5) < e6a)
+		for (;;)
 		{
-			goto moveonsgp;
+			sineo1=sin(eo1);
+			coseo1=cos(eo1);
+			if (fabs(temp5) < e6a)
+			{
+				break;
+			}
+			else
+			if (itemp3 >= 10.)
+			{
+				break;
+			}
+			else
+			itemp3=itemp1+1.;
+			temp5=1.-coseo1*axnsl-sineo1*aynsl;
+			temp5=(u-aynsl*coseo1+axnsl*sineo1-eo1)/temp5;
+			temp2=fabs(temp5);
+			if (temp2 > 1.)
+			{
+				temp5=temp2/temp5;
+			}
+			else
+			eo1=eo1+temp5;
 		}
-		else
-		if (itemp3 >= 10.)
-		{
-			goto moveonsgp;
-		}
-		else
-		itemp3=itemp1+1.;
-		temp5=1.-coseo1*axnsl-sineo1*aynsl;
-		temp5=(u-aynsl*coseo1+axnsl*sineo1-eo1)/temp5;
-		temp2=fabs(temp5);
-		if (temp2 > 1.)
-		{
-			temp5=temp2/temp5;
-		}
-		else
-		eo1=eo1+temp5;
-		goto loopsgp;
 
-moveonsgp:
 		/* Short period preliminary quantities */
 		ecose=axnsl*coseo1+aynsl*sineo1;
 		esine=axnsl*sineo1-aynsl*coseo1;
