@@ -775,7 +775,8 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	ux, uy, uz, vx, vy, vz;
 
 	/* Initialization */
-
+	if (isFlagClear(SGP_INITIALIZED_FLAG))
+	{
 		/* Recover original mean motion (xnodp) and   */
 		/* semimajor axis (aodp) from input elements. */
 		c1=ck2*1.5;
@@ -785,7 +786,7 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		cosio=cos(tle->xincl);
 		sinio=sin(tle->xincl);
 		a1=pow(xke/tle->xno,tothrd);
-		d1=c1/a1/a1*(3.0*cosio*sinio-1)/pow(1.-tle->eo*tle->eo,1.5);
+		d1=c1/a1/a1*(3.*cosio*sinio-1.)/pow(1.-tle->eo*tle->eo,1.5);
 		ao=a1*(1.-1./3.*d1-d1*d1-134./81.*d1*d1*d1);
 		po=ao*(1.-tle->eo*tle->eo);
 		qo=ao*(1.-tle->eo);
@@ -795,13 +796,12 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		d3o=c1*cosio;
 		d4o=d3o*sinio;
 		po2no=tle->xno/(po*po);
-		omgdot=c1*po2no*(5.*cosio*cosio-1);
+		omgdot=c1*po2no*(5.*cosio*cosio-1.);
 		xnodot=-2.*d3o*po2no;
 		c5=.5*c4*sinio*(3.+5.*cosio)/(1.+cosio);
 		c6=c4*sinio;
-
-	    ClearFlag(SIMPLE_FLAG);
-
+		ClearFlag(SIMPLE_FLAG);
+	}
 		/* Update for secular gravity and atmospheric drag. */
 		a=tle->xno+(2.*tle->xndt2o+3.*tle->xndd6o*tsince)*tsince;
 		a=ao*pow(tle->xno/a,tothrd);
@@ -1180,7 +1180,8 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	sine, cose, zc5, cape, am, beta2m, sinos, cosos, axnm, aynm, pm, 
 	g1, g2, g3, beta, g4, g5, snf, csf, snfg, csfg, sn2f2g, cs2f2g, 
 	ecosf, g1o, rm, aovr, g13, g14, dr, diwc, di, sin2du, xlamb, y4, 
-	y5, r, rdot, rvdot, snlamb, cslamb, ux, vx, uz, vz, uy, vy, temp1;
+	y5, r, rdot, rvdot, snlamb, cslamb, ux, vx, uz, vz, uy, vy, temp1, 
+	phase;
  
 	int iflag;
 
@@ -1384,11 +1385,11 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		aynm=em*sinos;
 		pm=am*beta2m;
 		g1=1./pm;
-		g2=0.5*ck2*g1;
+		g2=.5*ck2*g1;
 		g3=g2*g1;
 		beta=sqrt(beta2m);
-		g4=0.25*a3cof*sinio;
-		g5=0.25*a3cof*g1;
+		g4=.25*a3cof*sinio;
+		g5=.25*a3cof*g1;
 		snf=beta*sine*zc5;
 		csf=(cose-em)*zc5;
 		fm=AcTan(snf,csf);
@@ -1439,7 +1440,6 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		vel->x=rdot*ux+rvdot*vx;
 		vel->y=rdot*uy+rvdot*vy;
 		vel->z=rdot*uz+rvdot*vz;
-
 }
 
 void Deep(int ientry, tle_t * tle, deep_arg_t * deep_arg)
