@@ -4432,20 +4432,41 @@ void Calc()
 	tsince=(jul_utc-jul_epoch)*xmnpda;
 	age=jul_utc-jul_epoch;
 
-	/* Copy the ephemeris type in use to ephem string. */
-
-		if (isFlagSet(DEEP_SPACE_EPHEM_FLAG))
+	/* Copy the ephemeris type into the string and call NORAD routines */
+	
+	if (qth.mode==0) //SGP
+	{
+		strcpy(ephem,"SGP");
+		SGP(tsince, &tle, &pos, &vel);
+	}
+	else if (qth.mode==1) //SxP4
+	{
+		if(isFlagSet(DEEP_SPACE_EPHEM_FLAG))
+		{
 			strcpy(ephem,"SDP4");
+			SDP4(tsince, &tle, &pos, &vel);
+		}
 		else
+		{
 			strcpy(ephem,"SGP4");
+			SGP4(tsince, &tle, &pos, &vel);
+		}
+	}
+	else if (qth.mode==2) //SxP8
+	{
+		if(isFlagSet(DEEP_SPACE_EPHEM_FLAG))
+		{
+			strcpy(ephem,"SDP8");
+			SDP8(tsince, &tle, &pos, &vel);
+		}
+		else
+		{
+			strcpy(ephem,"SGP8");
+			SGP8(tsince, &tle, &pos, &vel);
+		}
+	}
 
-	/* Call NORAD routines according to deep-space flag. */
-
-	if (isFlagSet(DEEP_SPACE_EPHEM_FLAG))
-		SDP4(tsince, &tle, &pos, &vel);
-	else
-		SGP4(tsince, &tle, &pos, &vel);
-
+		
 	/* Scale position and velocity vectors to km and km/sec */
 
 	Convert_Sat_State(&pos, &vel);
