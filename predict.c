@@ -720,8 +720,8 @@ void select_ephemeris(tle_t *tle)
 	/* Selects the apropriate ephemeris type to be used   */
 	/* for predictions according to the data in the TLE   */
 	/* It also processes values in the tle set so that    */
-	/* they are apropriate for the sgp/sgp4/sdp4/sgp8/    */
-	/* sdp8 routines 									  */
+	/* they are apropriate for the sgp4/sdp4/sgp8/sdp8    */
+	/* routines 		    							  */
 
 	double ao, xnodp, dd1, dd2, delo, temp, a1, del1, r1;
 
@@ -773,9 +773,13 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	r, rdot, rvdot, temp, sinu, cosu, su, sin2u, cos2u, rk, uk, xnodek, 
 	xinck, sinuk, cosuk, sinnok, cosnok, sinik, cosik, xmx, xmy, 
 	ux, uy, uz, vx, vy, vz;
+	
+	int iflag;
 
 	/* Initialization */
-	if (isFlagClear(SGP_INITIALIZED_FLAG))
+	iflag=1;
+	
+	if (iflag!=0)
 	{
 		/* Recover original mean motion (xnodp) and   */
 		/* semimajor axis (aodp) from input elements. */
@@ -800,7 +804,7 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		xnodot=-2.*d3o*po2no;
 		c5=.5*c4*sinio*(3.+5.*cosio)/(1.+cosio);
 		c6=c4*sinio;
-		ClearFlag(SIMPLE_FLAG);
+		iflag=0;
 	}
 		/* Update for secular gravity and atmospheric drag. */
 		a=tle->xno+(2.*tle->xndt2o+3.*tle->xndd6o*tsince)*tsince;
@@ -1168,7 +1172,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	static double aodp, c1, c4, c5, cosio, d2, d3, d4, eta, 
 	omgdot, sinio, xnodp, xnodot, a1, theta2, tthmun, sinio2, cosio2, 
 	unm5th, unmth2, xgdt1, xmdot1, xhdt1, xlldot, xndt, edot, pp, xnd, 
-	qq, gamma, ed, ovgpp, i, isimp;
+	qq, gamma, ed, ovgpp;
 
 	double eosq, betao2, betao, del1, ao, delo, b, po, pom2, sing, 
 	cosg, temp, theta4, a3cof, pardt1, pardt2, pardt4, tsi, eta2, psim2, 
@@ -1183,8 +1187,8 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	y5, r, rdot, rvdot, snlamb, cslamb, ux, vx, uz, vz, uy, vy, temp1, 
 	phase;
  
-	int iflag;
-
+	int i;
+ 
 	/* Initialization */
 
 	if (isFlagClear(SGP8_INITIALIZED_FLAG))
@@ -1209,7 +1213,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		b=2.*tle->bstar/rho;
 
 		/* Initialization */
-		isimp=0;
+		ClearFlag(SIMPLE_FLAG);
 		po=aodp*betao2;
 		pom2=1./(po*po);
 		sinio=sin(tle->xincl);
@@ -1253,13 +1257,13 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		xndt=c1*((2.+eta2*(3.+34.*eosq)+5.*eeta*(4.+eta2)+8.5*eosq)+d1*d2*b1+c4*cos2g+c5*sing);
 		xndtn=xndt/xnodp;
 		
-		/* If drag is very small, the isimp flag is set and */
-		/* the equations are truncated to linear variation  */
-		/* in mean motion and quadratic variation in mean   */
-		/* anomaly.											*/
+		/* If drag is very small, the SIMPLE_FLAG is set and */
+		/* the equations are truncated to linear variation   */
+		/* in mean motion and quadratic variation in mean    */
+		/* anomaly.											 */
 		if (fabs(xndt*xmnpda)<=2.16E-3)
 		{
-			isimp=1;
+			SetFlag(SIMPLE_FLAG);
 			edot=-tothrd*xndtn*(1.-tle->eo);
 		}
 		else
@@ -1339,13 +1343,13 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 			ed=edot/(qq*gamma);
 			ovgpp=1./(gamma*(pp+1.));			
 		}
-		iflag=0;
+		SetFlag(SGP8_INITIALIZED_FLAG);
 	}
 		/* Update for secular gravity and atmospheric drag */
 		xmam=FMod2p(tle->xmo+xlldot*tsince);
 		omgasm=tle->omegao+omgdot*tsince;
 		xnodes=tle->xnodeo+xnodot*tsince;
-		if (isimp==1)
+		if (isFlagSet(SIMPLE_FLAG))
 		{
 			xn=xnodp+xndt*tsince;
 			em=tle->eo+edot*tsince;
@@ -1366,6 +1370,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		
 		/* Solve Kepler's Equation */
 		zc2=xmam+em*sin(xmam)*(1.+em*cos(xmam));
+		i=0;
 		do
 		{
 			sine=sin(zc2);
@@ -1374,7 +1379,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 			cape=(xmam+em*sine-zc2)*zc5+zc2;
 			if (fabs(cape-zc2)<=e6a) break;
 			zc2=cape;
-		}	while (i++<=10);
+		}	while (i++<10);
 		
 		/* Short period preliminary quantities */
 		am=pow(xke/xn,tothrd);
@@ -2198,7 +2203,7 @@ void SDP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	/* are vector_t structures returning ECI satellite position and */
 	/* velocity. Use Convert_Sat_State() to convert to km and km/s. */
 
-	int i, iflag;
+	int i;
 
 	static double c1, c4, tthmun, sinio2, cosio2, unm5th, unmth2, 
 	xgdot1, xhdot1, xlldot, xndot, edot;
@@ -2287,8 +2292,7 @@ void SDP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 			(2.+eta2*(2.+34.*deep_arg.eosq)+5.*eeta*(4.+eta2)+8.5*deep_arg.eosq)+
 			d1*d2*b1+c4*cos2g+c5*deep_arg.sing);
 		xndotn=xndot/deep_arg.xnodp;
-		edot=-tothrd*xndotn*(1.-tle->eo);
-		iflag=0;		
+		edot=-tothrd*xndotn*(1.-tle->eo);		
 		
 		/* initialize Deep() */
 
