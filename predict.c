@@ -775,9 +775,6 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	ux, uy, uz, vx, vy, vz;
 
 	/* Initialization */
-	if (isFlagClear(SGP_INITIALIZED_FLAG))
-	{
-		SetFlag(SGP_INITIALIZED_FLAG);
 
 		/* Recover original mean motion (xnodp) and   */
 		/* semimajor axis (aodp) from input elements. */
@@ -810,9 +807,7 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		a=ao*pow(tle->xno/a,tothrd);
 		e=e6a;
 		if (a>qo)
-		{
-				e=1.-qo/a;
-		}
+			e=1.-qo/a;
 		p=a*(1.-e*e);
 		xnodes=tle->xnodeo+xnodot*tsince;
 		omgas=tle->omegao+omgdot*tsince;
@@ -907,7 +902,6 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 			phase+=twopi;
 
 		phase=FMod2p(phase);
-	}
 }
 
 void SGP4(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
