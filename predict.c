@@ -5573,7 +5573,7 @@ void QthEdit()
 		
 	sprintf(temp,"%d",qth.mode);
 
-	mvprintw(18,20, "  Enter the perturbation mode to use.");
+	mvprintw(18,20, "  Enter the perturbation model to use.");
 	mvprintw(19,20, "0 = SGP   1 = SGP4/SDP4   2 = SGP8/SDP8");
 
 	if (KbEdit(44,16))
