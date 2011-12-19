@@ -104,11 +104,11 @@
 /*By changing flags around, you can test the other orbital models */
 
 #define ALL_FLAGS              -1
-#define SGP_INITIALIZED_FLAG   0x000001	/* finished, non-implimented */
+#define SGP_INITIALIZED_FLAG   0x000001
 #define SGP4_INITIALIZED_FLAG  0x000002
 #define SDP4_INITIALIZED_FLAG  0x000004
-#define SGP8_INITIALIZED_FLAG  0x000008	/* finished, non-implimented */
-#define SDP8_INITIALIZED_FLAG  0x000010	/* finished, non-implimented */
+#define SGP8_INITIALIZED_FLAG  0x000008
+#define SDP8_INITIALIZED_FLAG  0x000010
 #define SIMPLE_FLAG            0x000020
 #define DEEP_SPACE_EPHEM_FLAG  0x000040
 #define LUNAR_TERMS_DONE_FLAG  0x000080 /* will see about updating - FindMoon */
