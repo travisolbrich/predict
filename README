@@ -63,10 +63,10 @@ Normally, PREDICT handles longitudes in decimal degrees WEST (0-360
 degrees), and latitudes in decimal degrees NORTH.  This behavior can be
 modified by passing the -east or -south command line switches to PREDICT
 when it is invoked.  Your station's altitude in meters above mean sea
-level, a recent set of Keplerian orbital data for the satellites of
-interest, and an accurately set system clock are also required if
-successful real-time satellite tracking is also desired.  Sources
-for such data include http://www.celestrak.com/,
+level, your choice of a perturbation model, a recent set of Keplerian orbital 
+data for the satellites of interest, and an accurately set system clock are 
+also required ifsuccessful real-time satellite tracking is also desired. 
+Sources for such data include http://www.celestrak.com/,
 http://www.space-track.org, and http://www.amsat.org/.
 
 
