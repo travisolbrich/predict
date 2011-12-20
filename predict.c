@@ -4911,7 +4911,10 @@ char *string;
 				   worth displaying as a visible pass. */
 
 				if ((plus>3) || (plus>2 && asterisk>2))
+				{					
 					visible=1;
+					quit=0;
+				}
 			}
 
 			if (visible)
@@ -4933,12 +4936,15 @@ char *string;
 					else
 						y++;
 				}
+				if(quit==0)
+					quit = 10;
+				if(quit==1)
+					quit = -1;
 			}
-
 			buffer[0]=0;
 		}
 	}
-
+	
 	return quit;
 }
 
@@ -4950,9 +4956,10 @@ char mode;
 	   all passes), or through the PrintVisible() function if
 	   mode=='v' (show optically visible passes only). */
 
-	int quit=0, lastel=0, breakout=0;
+	int quit=0, lastel=0, breakout=0, count=0;
 	char string[80], type[10];
-
+	bool hasVisible = false;
+	
 	PreCalc(indx);
 	daynum=GetStartTime(0);
 	clear();
@@ -5005,7 +5012,7 @@ char mode;
 
 					nodelay(stdscr,FALSE);
 
-					quit=PrintVisible(string);
+					quit=PrintVisible(string);				
 				}
 
 				daynum+=cos((sat_ele-1.0)*deg2rad)*sqrt(sat_alt)/25000.0;
@@ -5034,10 +5041,22 @@ char mode;
 				quit=Print("\n",'p');
 
 			if (mode=='v')
+			{
 				quit=PrintVisible("\n");
-
+				if(quit==10)
+				{
+					quit = 0;
+					count++;
+				}
+				if(quit==-1)
+				{
+					quit = 1;
+					count++;
+				}
+			}
 			/* Move to next orbit */
 			daynum=NextAOS();
+			
 
 		}  while (quit==0 && breakout==0 && AosHappens(indx) && Decayed(indx,daynum)==0);
 	}
@@ -5052,7 +5071,21 @@ char mode;
 
 		if (Geostationary(indx)==1)
 			mvprintw(12,3,"*** Orbital predictions cannot be made for a geostationary satellite! ***\n");
+				
+		beep();
+		bkgdset(COLOR_PAIR(7)|A_BOLD);
+		AnyKey();
+		refresh();
+	}
+	
+	if (count==0&&mode=='v')
+	{
+		bkgdset(COLOR_PAIR(5)|A_BOLD);
+		clear();
 
+		
+		mvprintw(12,4,"*** No visible pass of %s occurs for your ground station! ***\n",sat[indx].name);
+				
 		beep();
 		bkgdset(COLOR_PAIR(7)|A_BOLD);
 		AnyKey();
