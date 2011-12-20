@@ -4321,6 +4321,20 @@ double daynum;
 		moon_gha+=360.0;
 }
 
+void FindMoon2(daynum);
+double daynum;
+{
+	/* This function determines the position of the moon, including
+	   the azimuth and elevation headings, relative to the latitude
+	   and longitude of the tracking station.  This code was derived
+	   from Paul Schlyter's website in determining the exact position 
+	   of the Moon found at: 
+	   http://stjarnhimlen.se/comp/tutorial.html and
+	   http://stjarnhimlen.se/comp/ppcomp.html */
+	   
+	   
+}
+
 void FindSun(daynum)
 double daynum;
 {
