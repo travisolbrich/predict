@@ -1184,8 +1184,9 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	sine, cose, zc5, cape, am, beta2m, sinos, cosos, axnm, aynm, pm, 
 	g1, g2, g3, beta, g4, g5, snf, csf, snfg, csfg, sn2f2g, cs2f2g, 
 	ecosf, g1o, rm, aovr, g13, g14, dr, diwc, di, sin2du, xlamb, y4, 
-	y5, r, rdot, rvdot, snlamb, cslamb, ux, vx, uz, vz, uy, vy, temp1, 
-	phase;
+	y5, r, rdot, rvdot, snlamb, cslamb, ux, vx, uz, vz, uy, vy, temp1;
+	
+	// double phase; 
  
 	int i;
  
@@ -3939,11 +3940,11 @@ double CurrentDaynum()
 	/* Read the system clock and return the number
 	   of days since 31Dec79 00:00:00 UTC (daynum 0) */
 
-	int x;
+	
 	struct timeval tptr;
 	double usecs, seconds;
 
-	x=gettimeofday(&tptr,NULL);
+	gettimeofday(&tptr,NULL);
 
 	usecs=0.000001*(double)tptr.tv_usec;
 	seconds=usecs+(double)tptr.tv_sec;

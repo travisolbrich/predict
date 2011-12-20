@@ -127,7 +127,7 @@ char argc, *argv[];
 
 		/* Compile PREDICT... */
 
-		cc=system("cc -O3 -s -fomit-frame-pointer -pthread predict.c -o predict -lncurses -lm");
+		cc=system("cc -w -O3 -s -fomit-frame-pointer -pthread predict.c -o predict -lncurses -lm");
 
 		/* Create vocalizer.h */
 
@@ -143,7 +143,7 @@ char argc, *argv[];
 			attrset(COLOR_PAIR(3)|A_BOLD);
 			printw("  Compiling vocalizer...\n");
 			refresh();
-			system("cc -Wall -O3 -s -fomit-frame-pointer vocalizer/vocalizer.c -o vocalizer/vocalizer");
+			system("cc -w -O3 -s -fomit-frame-pointer vocalizer/vocalizer.c -o vocalizer/vocalizer");
 		}
 
 		/* Now install the programs and man page by creating symlinks

@@ -3,3 +3,4 @@ predict.h
 *.lsm
 predict
 *~
+vocalizer.h
