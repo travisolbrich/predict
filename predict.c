@@ -41,7 +41,8 @@
 
 #define	km2mi		0.621371192		/* km to miles */
 #define deg2rad		1.745329251994330E-2	/* Degrees to radians */
-#define pi		3.14159265358979323846	/* Pi */
+#define rad2deg		57.295779513082323		/* Radians to degrees */
+#define pi		3.141592653589793238462643383279	/* Pi */
 #define pio2		1.57079632679489656	/* Pi/2 */
 #define x3pio2		4.71238898038468967	/* 3*Pi/2 */
 #define twopi		6.28318530717958623	/* 2*Pi  */
@@ -4319,20 +4320,6 @@ double daynum;
 
 	if (moon_gha<0.0)
 		moon_gha+=360.0;
-}
-
-void FindMoon2(daynum);
-double daynum;
-{
-	/* This function determines the position of the moon, including
-	   the azimuth and elevation headings, relative to the latitude
-	   and longitude of the tracking station.  This code was derived
-	   from Paul Schlyter's website in determining the exact position 
-	   of the Moon found at: 
-	   http://stjarnhimlen.se/comp/tutorial.html and
-	   http://stjarnhimlen.se/comp/ppcomp.html */
-	   
-	   
 }
 
 void FindSun(daynum)
