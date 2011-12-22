@@ -1447,6 +1447,8 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		vel->x=rdot*ux+rvdot*vx;
 		vel->y=rdot*uy+rvdot*vy;
 		vel->z=rdot*uz+rvdot*vz;
+		
+		phase=0;
 }
 
 void Deep(int ientry, tle_t * tle, deep_arg_t * deep_arg)
@@ -2396,30 +2398,8 @@ void SDP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	vel->x=rdot*ux+rvdot*vx;
 	vel->y=rdot*uy+rvdot*vy;
 	vel->z=rdot*uz+rvdot*vz;
-
-	/* Calculations for squint angle begin here... */
-
-/*	if (calc_squint)
-	{
-		bx=cos(alat)*cos(alon+deep_arg.omgadf);
-		by=cos(alat)*sin(alon+deep_arg.omgadf);
-		bz=sin(alat);
-		cx=bx;
-		cy=by*cos(xinck)-bz*sin(xinck);
-		cz=by*sin(xinck)+bz*cos(xinck);
-		ax=cx*cos(xnodek)-cy*sin(xnodek);
-		ay=cx*sin(xnodek)+cy*cos(xnodek);
-		az=cz;
-	}
 	
-*/	/* Phase in radians */
-/*	phase=xlt-deep_arg.xnode-deep_arg.omgadf+twopi;
-    
-	if (phase<0.0)
-		phase+=twopi;
-
-	phase=FMod2p(phase);
-*/
+	phase=0;
 }
 
 void Calculate_User_PosVel(double time, geodetic_t *geodetic, vector_t *obs_pos, vector_t *obs_vel)
