@@ -4394,7 +4394,7 @@ double daynum;
 	az=atan2(sin(h),cos(h)*sin(n)-tan(dec)*cos(n))+pi;
 	el=asin(sin(n)*sin(dec)+cos(n)*cos(dec)*cos(h));
 	
-//	el=el+((1./tan(el/deg2rad+7.31/(el/deg2rad+4.4)))/60.)*deg2rad;
+	el=el+((1./tan(el/deg2rad+7.31/(el/deg2rad+4.4)))/60.)*deg2rad;
 	
 	moon_az=az/deg2rad;
 	moon_el=el/deg2rad;
