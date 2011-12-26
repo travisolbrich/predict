@@ -4115,146 +4115,264 @@ double daynum;
 {
 	/* This function determines the position of the moon, including
 	   the azimuth and elevation headings, relative to the latitude
-	   and longitude of the tracking station.  This code was derived
-	   from a Javascript implementation of the Meeus method for
-	   determining the exact position of the Moon found at:
-	   http://www.geocities.com/s_perona/ingles/poslun.htm. */
+	   and longitude of the tracking station. */
+	   
+	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
+	/* Pg. 337 to 344 - Position of the moon.						*/
 
-	double	jd, ss, t, t1, t2, t3, d, ff, l1, m, m1, ex, om, l,
-		b, w1, w2, bt, p, lm, h, ra, dec, z, ob, n, e, el,
-		az, teg, th, mm, dv;
+	double	jd, t, t1, t2, t3, t4, d, ff, l1, m, m1, ex, p, 
+		a1, a2, a3, l, b, moonr, r, lm, h, ra, dec, z, ob, n, 
+		e, el, az, teg, th, mm, dv, xom;
 
 	jd=daynum+2444238.5;
 
-	t=(jd-2415020.0)/36525.0;
+	t=(jd-2451545.0)/36525.0;
 	t2=t*t;
 	t3=t2*t;
-	l1=270.434164+481267.8831*t-0.001133*t2+0.0000019*t3;
-	m=358.475833+35999.0498*t-0.00015*t2-0.0000033*t3;
-	m1=296.104608+477198.8491*t+0.009192*t2+0.0000144*t3;
-	d=350.737486+445267.1142*t-0.001436*t2+0.0000019*t3;
-	ff=11.250889+483202.0251*t-0.003211*t2-0.0000003*t3;
-	om=259.183275-1934.142*t+0.002078*t2+0.0000022*t3;
-	om=om*deg2rad;
+	t4=t3*t;
+	l1=218.3164477+481267.88123421*t-0.0015786*t2+t3/538841.-t4/65194000.;
+	d=297.8501921+445267.1114034*t-0.0018819*t2+t3/545868.-t4/113065000.;
+	m=357.5291092+35999.0502909*t-0.0001536*t2+t3/24490000.;
+	m1=134.9633964+477198.8675055*t+0.0087414*t2+t3/69699.-t4/14712000.;
+	ff=93.2720950+483202.0175233*t-0.0036539*t2-t3/3526000.+t4/863310000.;
+	a1=119.75+131.849*t;
+	a2=53.09+479264.290*t;
+	a3=313.45+481266.484*t;
+	ex=1.-0.002516*t-0.0000074*t2;
 	
-	/* Additive terms */
-
-	l1=l1+0.000233*sin((51.2+20.2*t)*deg2rad);
-	ss=0.003964*sin((346.56+132.87*t-0.0091731*t2)*deg2rad);
-	l1=l1+ss+0.001964*sin(om);
-	m=m-0.001778*sin((51.2+20.2*t)*deg2rad);
-	m1=m1+0.000817*sin((51.2+20.2*t)*deg2rad);
-	m1=m1+ss+0.002541*sin(om);
-	d=d+0.002011*sin((51.2+20.2*t)*deg2rad);
-	d=d+ss+0.001964*sin(om);
-	ff=ff+ss-0.024691*sin(om);
-	ff=ff-0.004328*sin(om+(275.05-2.3*t)*deg2rad);
-	ex=1.0-0.002495*t-0.00000752*t2;
-	om=om*deg2rad;
-
 	l1=PrimeAngle(l1);
+	d=PrimeAngle(d);
 	m=PrimeAngle(m);
 	m1=PrimeAngle(m1);
-	d=PrimeAngle(d);
 	ff=PrimeAngle(ff);
-	om=PrimeAngle(om);
-
-	m=m*deg2rad;
-	m1=m1*deg2rad;
-	d=d*deg2rad;
-	ff=ff*deg2rad;
-
-	/* Ecliptic Longitude */
-
-	l=l1+6.28875*sin(m1)+1.274018*sin(2.0*d-m1)+0.658309*sin(2.0*d);
-	l=l+0.213616*sin(2.0*m1)-ex*0.185596*sin(m)-0.114336*sin(2.0*ff);
-	l=l+0.058793*sin(2.0*d-2.0*m1)+ex*0.057212*sin(2.0*d-m-m1)+0.05332*sin(2.0*d+m1);
-	l=l+ex*0.045874*sin(2.0*d-m)+ex*0.041024*sin(m1-m)-0.034718*sin(d);
-	l=l-ex*0.030465*sin(m+m1)+0.015326*sin(2.0*d-2.0*ff)-0.012528*sin(2.0*ff+m1);
+	a1=PrimeAngle(a1);
+	a2=PrimeAngle(a2);
+	a3=PrimeAngle(a3);
 	
-	l=l-0.01098*sin(2.0*ff-m1)+0.010674*sin(4.0*d-m1)+0.010034*sin(3.0*m1);
-	l=l+0.008548*sin(4.0*d-2.0*m1)-ex*0.00791*sin(m-m1+2.0*d)-ex*0.006783*sin(2.0*d+m);
+	l1=Radians(l1);
+	d=Radians(d);
+	m=Radians(m);
+	m1=Radians(m1);
+	ff=Radians(ff);
+	a1=Radians(a1);
+	a2=Radians(a2);
+	a3=Radians(a3);
+		
+	/* Ecliptic Longitude (deg) */
+
+	lm=	 6288774.*sin(0.*d+0.*m+1.*m1+0.*ff)+
+		 1274027.*sin(2.*d+0.*m-1.*m1+0.*ff)+
+		 0658314.*sin(2.*d+0.*m+0.*m1+0.*ff)+
+		 0213618.*sin(0.*d+0.*m+2.*m1+0.*ff)+
+		-0185116.*sin(0.*d+1.*m+0.*m1+0.*ff)*ex+
+		-0114332.*sin(0.*d+0.*m+0.*m1+2.*ff)+
+		 0058793.*sin(2.*d+0.*m-2.*m1+0.*ff)+
+		 0057066.*sin(2.*d-1.*m-1.*m1+0.*ff)*ex+
+		 0053322.*sin(2.*d+0.*m+1.*m1+0.*ff)+
+		 0045758.*sin(2.*d-1.*m+0.*m1+0.*ff)*ex+
+		-0040923.*sin(0.*d+1.*m-1.*m1+0.*ff)*ex+
+		-0034720.*sin(1.*d+0.*m+0.*m1+0.*ff)+
+		-0030383.*sin(0.*d+1.*m+1.*m1+0.*ff)*ex+
+		 0015327.*sin(2.*d+0.*m+0.*m1-2.*ff)+
+		-0012528.*sin(0.*d+0.*m+1.*m1+2.*ff)+
+		 0010980.*sin(0.*d+0.*m+1.*m1-2.*ff)+
+		 0010675.*sin(4.*d+0.*m-1.*m1+0.*ff)+
+		 0010034.*sin(0.*d+0.*m+3.*m1+0.*ff)+
+		 0008548.*sin(4.*d+0.*m-2.*m1+0.*ff)+
+		-0007888.*sin(2.*d+1.*m-1.*m1+0.*ff)*ex+
+		-0006766.*sin(2.*d+1.*m+0.*m1+0.*ff)*ex+
+		-0005163.*sin(1.*d+0.*m-1.*m1+0.*ff)+
+		 0004987.*sin(1.*d+1.*m+0.*m1+0.*ff)*ex+
+		 0004036.*sin(2.*d-1.*m+1.*m1+0.*ff)*ex+
+		 0003994.*sin(2.*d+0.*m+2.*m1+0.*ff)+
+		 0003861.*sin(4.*d+0.*m+0.*m1+0.*ff)+
+		 0003665.*sin(2.*d+0.*m-3.*m1+0.*ff)+
+		-0002689.*sin(0.*d+1.*m-2.*m1+0.*ff)*ex+
+		-0002602.*sin(2.*d+0.*m-1.*m1+2.*ff)+
+		 0002390.*sin(2.*d-1.*m-2.*m1+0.*ff)*ex+
+		-0002348.*sin(1.*d+0.*m+1.*m1+0.*ff)+
+		 0002236.*sin(2.*d-2.*m+0.*m1+0.*ff)*ex*ex+
+		-0002120.*sin(0.*d+1.*m+2.*m1+0.*ff)*ex+
+		-0002069.*sin(0.*d+2.*m+0.*m1+0.*ff)*ex*ex+
+		 0002048.*sin(2.*d-2.*m-1.*m1+0.*ff)*ex*ex+
+		-0001773.*sin(2.*d+0.*m+1.*m1-2.*ff)+
+		-0001595.*sin(2.*d+0.*m+0.*m1+2.*ff)+
+		 0001215.*sin(4.*d-1.*m-1.*m1+0.*ff)*ex+
+		-0001110.*sin(0.*d+0.*m+2.*m1+2.*ff)+
+		-0000892.*sin(3.*d+0.*m-1.*m1+0.*ff)+
+		-0000810.*sin(2.*d+1.*m+1.*m1+0.*ff)*ex+
+		 0000759.*sin(4.*d-1.*m-2.*m1+0.*ff)*ex+
+		-0000713.*sin(0.*d+2.*m-1.*m1+0.*ff)*ex*ex+
+		-0000700.*sin(2.*d+2.*m-1.*m1+0.*ff)*ex*ex+
+		 0000691.*sin(2.*d+1.*m-2.*m1+0.*ff)*ex+
+		 0000596.*sin(2.*d-1.*m+0.*m1-2.*ff)*ex+
+		 0000549.*sin(4.*d+0.*m+1.*m1+0.*ff)+
+		 0000537.*sin(0.*d+0.*m+4.*m1+0.*ff)+
+		 0000520.*sin(4.*d-1.*m+0.*m1+0.*ff)*ex+
+		-0000487.*sin(1.*d+0.*m-2.*m1+0.*ff)+
+		-0000399.*sin(2.*d+1.*m+0.*m1-2.*ff)*ex+
+		-0000381.*sin(0.*d+0.*m+2.*m1-2.*ff)+
+		 0000351.*sin(1.*d+1.*m+1.*m1+0.*ff)*ex+
+		-0000340.*sin(3.*d+0.*m-2.*m1+0.*ff)+
+		 0000330.*sin(4.*d+0.*m-3.*m1+0.*ff)+
+		 0000327.*sin(2.*d-1.*m+2.*m1+0.*ff)*ex+
+		-0000323.*sin(0.*d+2.*m+1.*m1+0.*ff)*ex*ex+
+		 0000299.*sin(1.*d+1.*m-1.*m1+0.*ff)*ex+
+		 0000294.*sin(2.*d+0.*m+3.*m1+0.*ff);
+
+	/* Ecliptic latitude (deg) */
+
+	b=	 5128122.*sin(0.*d+0.*m+0.*m1+1.*ff)+
+		 0280602.*sin(0.*d+0.*m+1.*m1+1.*ff)+
+		 0277693.*sin(0.*d+0.*m+1.*m1-1.*ff)+
+		 0173237.*sin(2.*d+0.*m+0.*m1-1.*ff)+
+		 0055413.*sin(2.*d+0.*m-1.*m1+1.*ff)+
+		 0046271.*sin(2.*d+0.*m-1.*m1-1.*ff)+
+		 0032573.*sin(2.*d+0.*m+0.*m1+1.*ff)+
+		 0017198.*sin(0.*d+0.*m+2.*m1+1.*ff)+
+		 0009266.*sin(2.*d+0.*m+1.*m1-1.*ff)+
+		 0008822.*sin(0.*d+0.*m+2.*m1-1.*ff)+
+		 0008216.*sin(2.*d-1.*m+0.*m1-1.*ff)*ex+
+		 0004324.*sin(2.*d+0.*m-2.*m1-1.*ff)+
+		 0004200.*sin(2.*d+0.*m+1.*m1+1.*ff)+
+		-0003359.*sin(2.*d+1.*m+0.*m1-1.*ff)*ex+
+		 0002463.*sin(2.*d-1.*m-1.*m1+1.*ff)*ex+
+		 0002211.*sin(2.*d-1.*m+0.*m1+1.*ff)*ex+
+		 0002065.*sin(2.*d-1.*m-1.*m1-1.*ff)*ex+
+		-0001870.*sin(0.*d+1.*m-1.*m1-1.*ff)*ex+
+		 0001828.*sin(4.*d+0.*m-1.*m1-1.*ff)+
+		-0001794.*sin(0.*d+1.*m+0.*m1+1.*ff)*ex+
+		-0001749.*sin(0.*d+0.*m+0.*m1+3.*ff)+
+		-0001565.*sin(0.*d+1.*m-1.*m1+1.*ff)*ex+
+		-0001491.*sin(1.*d+0.*m+0.*m1+1.*ff)+
+		-0001475.*sin(0.*d+1.*m+1.*m1+1.*ff)*ex+
+		-0001410.*sin(0.*d+1.*m+1.*m1-1.*ff)*ex+
+		-0001344.*sin(0.*d+1.*m+0.*m1-1.*ff)*ex+
+		-0001335.*sin(1.*d+0.*m+0.*m1-1.*ff)+
+		 0001107.*sin(0.*d+0.*m+3.*m1+1.*ff)+
+		 0001021.*sin(4.*d+0.*m+0.*m1-1.*ff)+
+		 0000833.*sin(4.*d+0.*m-1.*m1+1.*ff)+
+		 0000777.*sin(0.*d+0.*m+1.*m1-3.*ff)+
+		 0000671.*sin(4.*d+0.*m-2.*m1+1.*ff)+
+		 0000607.*sin(2.*d+0.*m+0.*m1-3.*ff)+
+		 0000596.*sin(2.*d+0.*m+2.*m1-1.*ff)+
+		 0000491.*sin(2.*d-1.*m+1.*m1-1.*ff)*ex+
+		-0000451.*sin(2.*d+0.*m-2.*m1+1.*ff)+
+		 0000439.*sin(0.*d+0.*m+3.*m1-1.*ff)+
+		 0000422.*sin(2.*d+0.*m+2.*m1+1.*ff)+
+		 0000421.*sin(2.*d+0.*m-3.*m1-1.*ff)+
+		-0000366.*sin(2.*d+1.*m-1.*m1+1.*ff)*ex+
+		-0000351.*sin(2.*d+1.*m+0.*m1+1.*ff)*ex+
+		 0000331.*sin(4.*d+0.*m+0.*m1+1.*ff)+
+		 0000315.*sin(2.*d-1.*m+1.*m1+1.*ff)*ex+
+		 0000302.*sin(2.*d-2.*m+0.*m1-1.*ff)*ex*ex+
+		-0000283.*sin(0.*d+0.*m+1.*m1+3.*ff)+
+		-0000229.*sin(2.*d+1.*m+1.*m1-1.*ff)*ex+
+		 0000223.*sin(1.*d+1.*m+0.*m1-1.*ff)*ex+
+		 0000223.*sin(1.*d+1.*m+0.*m1+1.*ff)*ex+
+		-0000220.*sin(0.*d+1.*m-2.*m1-1.*ff)*ex+
+		-0000220.*sin(2.*d+1.*m-1.*m1-1.*ff)*ex+
+		-0000185.*sin(1.*d+0.*m+1.*m1+1.*ff)+
+		 0000181.*sin(2.*d-1.*m-2.*m1-1.*ff)*ex+
+		-0000177.*sin(0.*d+1.*m+2.*m1+1.*ff)*ex+
+		 0000176.*sin(4.*d+0.*m-2.*m1-1.*ff)+
+		 0000166.*sin(4.*d-1.*m-1.*m1-1.*ff)*ex+
+		-0000164.*sin(1.*d+0.*m+1.*m1-1.*ff)+
+		 0000132.*sin(4.*d+0.*m+1.*m1-1.*ff)+
+		-0000119.*sin(1.*d+0.*m-1.*m1-1.*ff)+
+		 0000115.*sin(4.*d-1.*m+0.*m1-1.*ff)*ex+
+		 0000107.*sin(2.*d-2.*m+0.*m1+1.*ff)*ex*ex;
+		
+	/* Distance calculation (km) */
+
+	r= -20905355.*cos(0.*d+0.*m+1.*m1+0.*ff)+
+		-3699111.*cos(2.*d+0.*m-1.*m1+0.*ff)+
+		-2955968.*cos(2.*d+0.*m+0.*m1+0.*ff)+
+		-0569925.*cos(0.*d+0.*m+2.*m1+0.*ff)+
+	 	 0048888.*cos(0.*d+1.*m+0.*m1+0.*ff)*ex+
+		-0003149.*cos(0.*d+0.*m+0.*m1+2.*ff)+
+		 0246158.*cos(2.*d+0.*m-2.*m1+0.*ff)+
+		-0152138.*cos(2.*d-1.*m-1.*m1+0.*ff)*ex+
+		-0170733.*cos(2.*d+0.*m+1.*m1+0.*ff)+
+		-0204586.*cos(2.*d-1.*m+0.*m1+0.*ff)*ex+
+		-0129620.*cos(0.*d+1.*m-1.*m1+0.*ff)*ex+
+		 0108743.*cos(1.*d+0.*m+0.*m1+0.*ff)+
+		 0104755.*cos(0.*d+1.*m+1.*m1+0.*ff)*ex+
+		 0010321.*cos(2.*d+0.*m+0.*m1-2.*ff)+
+		 0079661.*cos(0.*d+0.*m+1.*m1-2.*ff)+
+		-0034782.*cos(4.*d+0.*m-1.*m1+0.*ff)+
+		-0023210.*cos(0.*d+0.*m+3.*m1+0.*ff)+
+		-0021636.*cos(4.*d+0.*m-2.*m1+0.*ff)+
+		 0024208.*cos(2.*d+1.*m-1.*m1+0.*ff)*ex+
+		 0030824.*cos(2.*d+1.*m+0.*m1+0.*ff)*ex+
+		-0008379.*cos(1.*d+0.*m-1.*m1+0.*ff)+
+		-0016675.*cos(1.*d+1.*m+0.*m1+0.*ff)*ex+
+		-0012831.*cos(2.*d-1.*m+1.*m1+0.*ff)*ex+
+		-0010445.*cos(2.*d+0.*m+2.*m1+0.*ff)+
+		-0011650.*cos(4.*d+0.*m+0.*m1+0.*ff)+
+		 0014403.*cos(2.*d+0.*m-3.*m1+0.*ff)+
+		-0007003.*cos(0.*d+1.*m-2.*m1+0.*ff)*ex+
+		 0010056.*cos(2.*d-1.*m-2.*m1+0.*ff)*ex+
+		 0006322.*cos(1.*d+0.*m+1.*m1+0.*ff)+
+		-0009884.*cos(2.*d-2.*m+0.*m1+0.*ff)*ex*ex+
+		 0005751.*cos(0.*d+1.*m+2.*m1+0.*ff)*ex+
+		-0004950.*cos(2.*d-2.*m-1.*m1+0.*ff)*ex*ex+
+		 0004130.*cos(2.*d+0.*m+1.*m1-2.*ff)+
+		-0003958.*cos(4.*d-1.*m-1.*m1+0.*ff)*ex+
+		 0003258.*cos(3.*d+0.*m-1.*m1+0.*ff)+
+		 0002616.*cos(2.*d+1.*m+1.*m1+0.*ff)*ex+
+		-0001897.*cos(4.*d-1.*m-2.*m1+0.*ff)*ex+
+		-0002117.*cos(0.*d+2.*m-1.*m1+0.*ff)*ex*ex+
+		 0002354.*cos(2.*d+2.*m-1.*m1+0.*ff)*ex*ex+
+		-0001423.*cos(4.*d+0.*m+1.*m1+0.*ff)+
+		-0001117.*cos(0.*d+0.*m+4.*m1+0.*ff)+
+		-0001571.*cos(4.*d-1.*m+0.*m1+0.*ff)*ex+
+		-0001739.*cos(1.*d+0.*m-2.*m1+0.*ff)+
+		-0004421.*cos(0.*d+0.*m+2.*m1-2.*ff)+
+		 0001165.*cos(0.*d+2.*m+1.*m1+0.*ff)*ex*ex+
+		 0008752.*cos(2.*d+0.*m-1.*m1-2.*ff);
+		
+	/* Additive terms - "The terms involving a1 are due to the 	 */
+	/* action of Venus, the term involving a2 is due to Jupiter, */ 
+	/* wile those involving l1 are due to the flattening of the	 */
+	/* Earth"  - Astronomical Algorithms by Jean Meesus			 */
 	
-	l=l+0.005162*sin(m1-d)+ex*0.005*sin(m+d)+ex*0.004049*sin(m1-m+2.0*d);
-	l=l+0.003996*sin(2.0*m1+2.0*d)+0.003862*sin(4.0*d)+0.003665*sin(2.0*d-3.0*m1);
+	lm=lm+3958.*sin(a1)+
+		  1962.*sin(l1-ff)+
+		  0318.*sin(a2);
+		
+	b=b-2235.*sin(l1)+
+		0382.*sin(a3)+
+		0175.*sin(a1-ff)+
+		0175.*sin(a1+ff)+
+		0127.*sin(l1-m1)+
+	   -0115.*sin(l1+m1);
+	   
+	/* Coordinates of the Moon */
+	lm=Degrees(l1)+lm/1000000.;	//Degrees
+	b=b/1000000.;				//Degrees
+	moonr=385000.56+r/1000.;	//km
 
-	l=l+ex*0.002695*sin(2.0*m1-m)+0.002602*sin(m1-2.0*ff-2.0*d)+ex*0.002396*sin(2.0*d-m-2.0*m1);
-
-	l=l-0.002349*sin(m1+d)+ex*ex*0.002249*sin(2.0*d-2.0*m)-ex*0.002125*sin(2.0*m1+m);
-
-	l=l-ex*ex*0.002079*sin(2.0*m)+ex*ex*0.002059*sin(2.0*d-m1-2.0*m)-0.001773*sin(m1+2.0*d-2.0*ff);
-
-	l=l+ex*0.00122*sin(4.0*d-m-m1)-0.00111*sin(2.0*m1+2.0*ff)+0.000892*sin(m1-3.0*d);
-
-	l=l-ex*0.000811*sin(m+m1+2.0*d)+ex*0.000761*sin(4.0*d-m-2.0*m1)+ex*ex*.000717*sin(m1-2.0*m);
-
-	l=l+ex*ex*0.000704*sin(m1-2.0*m-2.0*d)+ex*0.000693*sin(m-2.0*m1+2.0*d)+ex*0.000598*sin(2.0*d-m-2.0*ff)+0.00055*sin(m1+4.0*d);
-
-	l=l+0.000538*sin(4.0*m1)+ex*0.000521*sin(4.0*d-m)+0.000486*sin(2.0*m1-d);
-
-	l=l-0.001595*sin(2.0*ff+2.0*d);
-
-	/* Ecliptic latitude */
-
-	b=5.128189*sin(ff)+0.280606*sin(m1+ff)+0.277693*sin(m1-ff)+0.173238*sin(2.0*d-ff);
-	b=b+0.055413*sin(2.0*d+ff-m1)+0.046272*sin(2.0*d-ff-m1)+0.032573*sin(2.0*d+ff);
-
-	b=b+0.017198*sin(2.0*m1+ff)+9.266999e-03*sin(2.0*d+m1-ff)+0.008823*sin(2.0*m1-ff);
-	b=b+ex*0.008247*sin(2.0*d-m-ff)+0.004323*sin(2.0*d-ff-2.0*m1)+0.0042*sin(2.0*d+ff+m1);
-
-	b=b+ex*0.003372*sin(ff-m-2.0*d)+ex*0.002472*sin(2.0*d+ff-m-m1)+ex*0.002222*sin(2.0*d+ff-m);
-
-	b=b+0.002072*sin(2.0*d-ff-m-m1)+ex*0.001877*sin(ff-m+m1)+0.001828*sin(4.0*d-ff-m1);
-
-	b=b-ex*0.001803*sin(ff+m)-0.00175*sin(3.0*ff)+ex*0.00157*sin(m1-m-ff)-0.001487*sin(ff+d)-ex*0.001481*sin(ff+m+m1)+ex*0.001417*sin(ff-m-m1)+ex*0.00135*sin(ff-m)+0.00133*sin(ff-d);
-
-	b=b+0.001106*sin(ff+3.0*m1)+0.00102*sin(4.0*d-ff)+0.000833*sin(ff+4.0*d-m1);
-
-	b=b+0.000781*sin(m1-3.0*ff)+0.00067*sin(ff+4.0*d-2.0*m1)+0.000606*sin(2.0*d-3.0*ff);
-
-	b=b+0.000597*sin(2.0*d+2.0*m1-ff)+ex*0.000492*sin(2.0*d+m1-m-ff)+0.00045*sin(2.0*m1-ff-2.0*d);
-
-	b=b+0.000439*sin(3.0*m1-ff)+0.000423*sin(ff+2.0*d+2.0*m1)+0.000422*sin(2.0*d-ff-3.0*m1);
-
-	b=b-ex*0.000367*sin(m+ff+2.0*d-m1)-ex*0.000353*sin(m+ff+2.0*d)+0.000331*sin(ff+4.0*d);
-
-	b=b+ex*0.000317*sin(2.0*d+ff-m+m1)+ex*ex*0.000306*sin(2.0*d-2.0*m-ff)-0.000283*sin(m1+3.0*ff);
-
-	w1=0.0004664*cos(om*deg2rad);
-	w2=0.0000754*cos((om+275.05-2.3*t)*deg2rad);
-	bt=b*(1.0-w1-w2);
-
-	/* Parallax calculations */
-
-	p=0.950724+0.051818*cos(m1)+0.009531*cos(2.0*d-m1)+0.007843*cos(2.0*d)+0.002824*cos(2.0*m1)+0.000857*cos(2.0*d+m1)+ex*0.000533*cos(2.0*d-m)+ex*0.000401*cos(2.0*d-m-m1);
-
-	p=p+0.000173*cos(3.0*m1)+0.000167*cos(4.0*d-m1)-ex*0.000111*cos(m)+0.000103*cos(4.0*d-2.0*m1)-0.000084*cos(2.0*m1-2.0*d)-ex*0.000083*cos(2.0*d+m)+0.000079*cos(2.0*d+2.0*m1);
-
-	p=p+0.000072*cos(4.0*d)+ex*0.000064*cos(2.0*d-m+m1)-ex*0.000063*cos(2.0*d+m-m1);
-
-	p=p+ex*0.000041*cos(m+d)+ex*0.000035*cos(2.0*m1-m)-0.000033*cos(3.0*m1-2.0*d);
-
-	p=p-0.00003*cos(m1+d)-0.000029*cos(2.0*ff-2.0*d)-ex*0.000029*cos(2.0*m1+m);
-
-	p=p+ex*ex*0.000026*cos(2.0*d-2.0*m)-0.000023*cos(2.0*ff-2.0*d+m1)+ex*0.000019*cos(4.0*d-m-m1);
-
-	b=bt*deg2rad;
-	lm=l*deg2rad;
-	moon_dx=3.0/(pi*p);
-
-	/* Semi-diameter calculation */
-	/* sem=10800.0*asin(0.272488*p*deg2rad)/pi; */
+	moon_dx=moonr/385000.56;	//Unitless km/km
+	
+	p=asin(6378.14/moonr);		//Radians
+	
+	lm=Radians(lm);
+	b=Radians(b);
+	
+	lm=FixAngle(lm);
+	b=FixAngle(b);
 
 	/* Convert ecliptic coordinates to equatorial coordinates */
-
-	z=(jd-2415020.5)/365.2422;
-	ob=23.452294-(0.46845*z+5.9e-07*z*z)/3600.0;
+	ob=  (23.+26./60.+21.448/3600.)
+		-(46.8150/3600.)*t
+		-(0.00059/3600.)*t2
+		+(0.001813/3600.)*t3;
+	ob=PrimeAngle(ob);
 	ob=ob*deg2rad;
-	dec=asin(sin(b)*cos(ob)+cos(b)*sin(ob)*sin(lm));
-	ra=acos(cos(b)*cos(lm)/cos(dec));
 	
-	if (lm>pi)
-		ra=twopi-ra;
+	ra=atan2(sin(lm)*cos(ob)-tan(b)*sin(ob),cos(lm));
+	dec=asin(sin(b)*cos(ob)+cos(b)*sin(ob)*sin(lm));
 
 	/* ra = right ascension */
 	/* dec = declination */
@@ -4263,19 +4381,21 @@ double daynum;
 	e=-qth.stnlong*deg2rad;  /* East longitude of tracking station */
 
 	/* Find siderial time in radians */
-
-	t=(jd-2451545.0)/36525.0;
 	teg=280.46061837+360.98564736629*(jd-2451545.0)+(0.000387933*t-t*t/38710000.0)*t;
 
 	while (teg>360.0)
 		teg-=360.0;
-
+	while (teg<0.0)
+		teg+=360.0;
+	
 	th=FixAngle((teg-qth.stnlong)*deg2rad);
 	h=th-ra;
 
 	az=atan2(sin(h),cos(h)*sin(n)-tan(dec)*cos(n))+pi;
 	el=asin(sin(n)*sin(dec)+cos(n)*cos(dec)*cos(h));
-
+	
+//	el=el+((1./tan(el/deg2rad+7.31/(el/deg2rad+4.4)))/60.)*deg2rad;
+	
 	moon_az=az/deg2rad;
 	moon_el=el/deg2rad;
 
