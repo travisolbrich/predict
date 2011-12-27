@@ -172,7 +172,7 @@ double	tsince, jul_epoch, jul_utc, eclipse_depth=0,
 	sun_azi, sun_ele, daynum, fm, fk, age, aostime,
 	lostime, ax, ay, az, rx, ry, rz, squint, alat, alon,
 	sun_ra, sun_dec, sun_lat, sun_lon, sun_range, sun_range_rate,
-	moon_az, moon_el, moon_dx, moon_ra, moon_dec, moon_gha, moon_dv;
+	moon_az, moon_el, moon_dx, moon_ra, moon_dec, moon_gha, moon_dv, moon_ill;
 
 char	qthfile[50], tlefile[50], dbfile[50], temp[80], output[25],
 	serial_port[15], resave=0, reload_tle=0, netport[6],
@@ -4313,6 +4313,22 @@ double Obliquity(double daynum)
 	return ob;
 }
 
+double Illuminated_Fraction_of_Moon(double d, double m, double m1)
+{
+	/* "The illuminated fraction k of the disk of the moon */
+	/* depends on teh selenocentric elongatin of the Earth */
+	/* from the Sun, called the phase angle (i).		   */
+	
+	double k, i;
+	
+	i=pi-d-(6.289*sin(m1)+2.100*sin(m)-1.274*sin(2*d-m1)-0.658*sin(2*d)
+		-0.214*sin(2*m1)-0.110*sin(d))*deg2rad;
+	
+	k=(1.+cos(i))/2.;
+	
+	return k;
+}
+
 void FindMoon(daynum)
 double daynum;
 {
@@ -4325,7 +4341,7 @@ double daynum;
 
 	double	jd, t, t1, t2, t3, t4, d, ff, l1, m, m1, ex, p, 
 		a1, a2, a3, l, b, moonr, r, lm, h, ra, dec, z, ob, n, 
-		e, u, S, C, dra, el, az, teg, dnut, th, mm, dv, xom;
+		e, u, S, C, dra, el, az, teg, dnut, th, mm, dv, xom, k;
 
 	jd=daynum+2444238.5;
 
@@ -4609,7 +4625,7 @@ double daynum;
 	/* Pg. 105 - 108 - Astronomical Algorithms by Jean Meeus	*/
 	if (el>15.*deg2rad)
 	{
-		el=el+((58.267*tan(pi/2.-el)-0.0824*pow(tan(pi/2.-el),3))/3600.)*deg2rad;
+		el=el+((58.267*tan(pi/2.-el)-0.0824*pow(tan(pi/2.-el),3.))/3600.)*deg2rad;
 	}
 
 	moon_az=az/deg2rad;
@@ -4636,6 +4652,10 @@ double daynum;
 
 	if (moon_gha<0.0)
 		moon_gha+=360.0;
+		
+	/* Illuminated Fraction of the Moon							*/
+	k=Illuminated_Fraction_of_Moon(d,m,m1);
+	moon_ill=k;
 }
 
 void FindSun(daynum)
@@ -6287,7 +6307,7 @@ char speak;
 		mvprintw(21,5,"---------");
 		attrset(COLOR_PAIR(3)|A_BOLD);
 		mvprintw(22,5,"%-7.2fAz",sun_azi);
-		mvprintw(23,4,"%+-6.2f  El",sun_ele);
+		mvprintw(23,4," %+-6.2f El",sun_ele);
 
 		FindMoon(daynum);
 
@@ -6296,7 +6316,8 @@ char speak;
 		mvprintw(21,65,"---------");
 		attrset(COLOR_PAIR(3)|A_BOLD);
 		mvprintw(22,65,"%-7.2fAz",moon_az);
-		mvprintw(23,64,"%+-6.2f  El",moon_el);
+		mvprintw(23,64," %+-6.2f El",moon_el);
+		mvprintw(24,64,"  %+-1.2f Ill.",moon_ill);
 
 		if (geostationary==1 && sat_ele>=0.0)
 		{
@@ -6591,7 +6612,7 @@ void MultiTrack()
 				mvprintw(18,5,"---------");
 				attrset(COLOR_PAIR(3)|A_BOLD);
 				mvprintw(19,5,"%-7.2fAz",sun_azi);
-				mvprintw(20,4,"%+-6.2f  El",sun_ele);
+				mvprintw(20,4," %+-6.2f El",sun_ele);
 
 				FindMoon(daynum);
 
@@ -6600,7 +6621,8 @@ void MultiTrack()
 				mvprintw(18,66,"---------");
 				attrset(COLOR_PAIR(3)|A_BOLD);
 				mvprintw(19,66,"%-7.2fAz",moon_az);
-				mvprintw(20,65,"%+-6.2f  El",moon_el);
+				mvprintw(20,65," %+-6.2f El",moon_el);
+				mvprintw(21,64,"   %+-1.2f Ill.",moon_ill);
 
 				/* Calculate Next Event (AOS/LOS) Times */
 
