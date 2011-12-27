@@ -5452,7 +5452,7 @@ void PredictMoon()
 
 		while (moonrise==0.0)
 		{
-			if (fabs(moon_el)<0.03)
+			if (fabs(moon_el)<0.1)
 				moonrise=daynum;
 			else
 			{
