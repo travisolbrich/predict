@@ -4110,6 +4110,209 @@ char mode;
 	return ((double)DayNum(mm,dd,yy)+((hr/24.0)+(min/1440.0)+(sec/86400.0)));
 }
 
+double Nutation(double daynum)
+{
+	/* The nutation is a periodic oscillation of the rotational 	*/
+	/* axis of the Earth around its "mean" position.  				*/
+	/* Used in FindMoon()											*/
+	
+	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
+	/* Pg. 113 to 148 - Nutation and Obliquity.						*/
+	
+	double jd, t, t2, t3, d, m, m1, ff, om, dnut;
+	
+	jd=daynum+2444238.5;
+	
+	t=(jd-2451545.0)/36525.0;
+	t2=t*t;
+	t3=t2*t;
+	
+	d=297.85036+445267.111480*t-0.0019142*t2+t3/189474.0;
+	m=357.52772+35999.050340*t-0.0001603*t2-t3/300000.0;
+	m1=134.96298+477198.867398*t+0.0086972*t2+t3/56250.0;
+	ff=93.27191+483202.017538*t-0.0036825*t2+t3/327270.0;
+	om=125.04452-1934.136261*t+0.0020708*t2+t3/450000.0;
+	
+	d=PrimeAngle(d);
+	m=PrimeAngle(m);
+	m1=PrimeAngle(m1);
+	ff=PrimeAngle(ff);
+	om=PrimeAngle(om);
+	
+	d=Radians(d);
+	m=Radians(m);
+	m1=Radians(m1);
+	ff=Radians(ff);
+	om=Radians(om);
+	
+	dnut=(-171996.-174.2*t)*sin(0.*d+0.*m+0.*m1+0.*ff+1.*om)+
+		    (-13187.-1.6*t)*sin(-2.*d+0.*m+0.*m1+2.*ff+2.*om)+
+	         (-2274.-0.2*t)*sin(0.*d+0.*m+0.*m1+2.*ff+2.*om)+
+			  (2062.+0.2*t)*sin(0.*d+0.*m+0.*m1+0.*ff+2.*om)+
+			  (1426.-3.4*t)*sin(0.*d+1.*m+0.*m1+0.*ff+0.*om)+
+			   (712.+0.1*t)*sin(0.*d+0.*m+1.*m1+0.*ff+0.*om)+
+			  (-517.+1.2*t)*sin(-2.*d+1.*m+0.*m1+2.*ff+2.*om)+
+			  (-386.-0.4*t)*sin(0.*d+0.*m+0.*m1+2.*ff+1.*om)+
+					  -301.*sin(0.*d+0.*m+1.*m1+2.*ff+2.*om)+
+			   (217.-0.5*t)*sin(-2.*d-1.*m+0.*m1+2.*ff+2.*om)+
+					  -158.*sin(-2.*d+0.*m+1.*m1+0.*ff+0.*om)+
+			   (129.+0.1*t)*sin(-2.*d+0.*m+0.*m1+2.*ff+1.*om)+
+					   123.*sin(0.*d+0.*m-1.*m1+2.*ff+2.*om)+
+						63.*sin(2.*d+0.*m+0.*m1+0.*ff+0.*om)+
+				(63.+0.1*t)*sin(0.*d+0.*m+1.*m1+0.*ff+1.*om)+
+					   -59.*sin(2.*d+0.*m-1.*m1+2.*ff+2.*om)+
+			   (-58.-0.1*t)*sin(0.*d+0.*m-1.*m1+0.*ff+1.*om)+
+					   -51.*sin(0.*d+0.*m+1.*m1+2.*ff+1.*om)+
+						48.*sin(-2.*d+0.*m+2.*m1+0.*ff+0.*om)+
+						46.*sin(0.*d+0.*m-2.*m1+2.*ff+1.*om)+
+					   -38.*sin(2.*d+0.*m+0.*m1+2.*ff+2.*om)+
+					   -31.*sin(0.*d+0.*m+2.*m1+2.*ff+2.*om)+
+						29.*sin(0.*d+0.*m+2.*m1+0.*ff+0.*om)+
+						29.*sin(-2.*d+0.*m+1.*m1+2.*ff+2.*om)+
+						26.*sin(0.*d+0.*m+0.*m1+2.*ff+0.*om)+
+					   -22.*sin(-2.*d+0.*m+0.*m1+2.*ff+0.*om)+
+						21.*sin(0.*d+0.*m-1.*m1+2.*ff+1.*om)+
+				(17.-0.1*t)*sin(0.*d+2.*m+0.*m1+0.*ff+0.*om)+
+						16.*sin(2.*d+0.*m-1.*m1+0.*ff+1.*om)+
+			   (-16.+0.1*t)*sin(-2.*d+2.*m+0.*m1+2.*ff+2.*om)+
+					   -15.*sin(0.*d+1.*m+0.*m1+0.*ff+1.*om)+
+					   -13.*sin(-2.*d+0.*m+1.*m1+0.*ff+1.*om)+
+					   -12.*sin(0.*d-1.*m+0.*m1+0.*ff+1.*om)+
+						11.*sin(0.*d+0.*m+2.*m1-2.*ff+0.*om)+
+					   -10.*sin(2.*d+0.*m-1.*m1+2.*ff+1.*om)+
+					    -8.*sin(2.*d+0.*m+1.*m1+2.*ff+2.*om)+
+						 7.*sin(0.*d+1.*m+0.*m1+2.*ff+2.*om)+
+						-7.*sin(-2.*d+1.*m+1.*m1+0.*ff+0.*om)+
+						-7.*sin(0.*d-1.*m+0.*m1+2.*ff+2.*om)+
+						-7.*sin(2.*d+0.*m+0.*m1+2.*ff+1.*om)+
+						 6.*sin(2.*d+0.*m+1.*m1+0.*ff+0.*om)+
+						 6.*sin(-2.*d+0.*m+2.*m1+2.*ff+2.*om)+
+						 6.*sin(-2.*d+0.*m+1.*m1+2.*ff+1.*om)+
+						-6.*sin(2.*d+0.*m-2.*m1+0.*ff+1.*om)+
+						-6.*sin(2.*d+0.*m+0.*m1+0.*ff+1.*om)+
+						 5.*sin(0.*d-1.*m+1.*m1+0.*ff+0.*om)+
+						-5.*sin(-2.*d-1.*m+0.*m1+2.*ff+1.*om)+
+						-5.*sin(-2.*d+0.*m+0.*m1+0.*ff+1.*om)+
+						-5.*sin(0.*d+0.*m+2.*m1+2.*ff+1.*om)+
+						 4.*sin(-2.*d+0.*m+2.*m1+0.*ff+1.*om)+
+						 4.*sin(-2.*d+1.*m+0.*m1+2.*ff+1.*om)+
+						 4.*sin(0.*d+0.*m+1.*m1-2.*ff+0.*om)+
+						-4.*sin(-1.*d+0.*m+1.*m1+0.*ff+0.*om)+
+						-4.*sin(-2.*d+1.*m+0.*m1+0.*ff+0.*om)+
+						-4.*sin(1.*d+0.*m+0.*m1+0.*ff+0.*om)+
+						 3.*sin(0.*d+0.*m+1.*m1+2.*ff+0.*om)+
+						-3.*sin(0.*d+0.*m-2.*m1+2.*ff+2.*om)+
+						-3.*sin(-1.*d-1.*m+1.*m1+0.*ff+0.*om)+
+						-3.*sin(0.*d+1.*m+1.*m1+0.*ff+0.*om)+
+						-3.*sin(0.*d-1.*m+1.*m1+2.*ff+2.*om)+
+						-3.*sin(2.*d-1.*m-1.*m1+2.*ff+2.*om)+
+						-3.*sin(0.*d+0.*m+3.*m1+2.*ff+2.*om)+
+						-3.*sin(2.*d-1.*m+0.*m1+2.*ff+2.*om);
+	
+	dnut=dnut*0.0001/3600.;
+	
+	return dnut;
+}
+
+double Obliquity(double daynum)
+{
+	/* The obliquity of the ecliptic is the angle between the   */
+	/* equator and the ecliptic.  Used in FindMoon()			*/
+	
+	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
+	/* Pg. 113 to 148 - Nutation and Obliquity.						*/
+	
+	double jd, t, t2, t3, d, m, m1, ff, om, u, u2, u3, u4, u5, 
+	u6, u7, u8, u9, u10, epo, depo, ob;
+	
+	jd=daynum+2444238.5;
+	
+	t=(jd-2451545.0)/36525.0;
+	t2=t*t;
+	t3=t2*t;
+	
+	d=297.85036+445267.111480*t-0.0019142*t2+t3/189474.0;
+	m=357.52772+35999.050340*t-0.0001603*t2-t3/300000.0;
+	m1=134.96298+477198.867398*t+0.0086972*t2+t3/56250.0;
+	ff=93.27191+483202.017538*t-0.0036825*t2+t3/327270.0;
+	om=125.04452-1934.136261*t+0.0020708*t2+t3/450000.0;
+	
+	d=PrimeAngle(d);
+	m=PrimeAngle(m);
+	m1=PrimeAngle(m1);
+	ff=PrimeAngle(ff);
+	om=PrimeAngle(om);
+	
+	d=Radians(d);
+	m=Radians(m);
+	m1=Radians(m1);
+	ff=Radians(ff);
+	om=Radians(om);
+	
+	u=t/100.;
+	u2=u*u;
+	u3=u2*u;
+	u4=u3*u;
+	u5=u4*u;
+	u6=u5*u;
+	u7=u6*u;
+	u8=u7*u;
+	u9=u8*u;
+	u10=u9*u;
+	
+	/* Obliquity calculation good for 0.01" over
+	   4000 years from J2000.0 */	
+	epo=(23.+26./60.+21.448/3600.)+
+		(-4680.93*u-1.55*u2+1999.25*u3-51.38*u4-249.67*u5
+		-39.05*u6+7.12*u7+27.87*u8+5.79*u9+2.45*u10)/3600.;
+	
+	depo=(92025.+8.9*t)*cos(0.*d+0.*m+0.*m1+0.*ff+1.*om)+
+		 (5736.-3.1*t)*cos(-2.*d+0.*m+0.*m1+2.*ff+2.*om)+
+	      (977.-0.5*t)*cos(0.*d+0.*m+0.*m1+2.*ff+2.*om)+
+		 (-895.+0.5*t)*cos(0.*d+0.*m+0.*m1+0.*ff+2.*om)+
+		   (54.-0.1*t)*cos(0.*d+1.*m+0.*m1+0.*ff+0.*om)+
+				   -7.*cos(0.*d+0.*m+1.*m1+0.*ff+0.*om)+
+		  (224.-0.6*t)*cos(-2.*d+1.*m+0.*m1+2.*ff+2.*om)+
+				  200.*cos(0.*d+0.*m+0.*m1+2.*ff+1.*om)+
+		  (129.-0.1*t)*cos(0.*d+0.*m+1.*m1+2.*ff+2.*om)+
+		  (-95.+0.3*t)*cos(-2.*d-1.*m+0.*m1+2.*ff+2.*om)+
+				  -70.*cos(-2.*d+0.*m+0.*m1+2.*ff+1.*om)+
+				  -53.*cos(0.*d+0.*m-1.*m1+2.*ff+2.*om)+
+				  -33.*cos(0.*d+0.*m+1.*m1+0.*ff+1.*om)+
+				   26.*cos(2.*d+0.*m-1.*m1+2.*ff+2.*om)+
+				   32.*cos(0.*d+0.*m-1.*m1+0.*ff+1.*om)+
+				   27.*cos(0.*d+0.*m+1.*m1+2.*ff+1.*om)+
+				  -24.*cos(0.*d+0.*m-2.*m1+2.*ff+1.*om)+
+				   16.*cos(2.*d+0.*m+0.*m1+2.*ff+2.*om)+
+				   13.*cos(0.*d+0.*m+2.*m1+2.*ff+2.*om)+
+				  -12.*cos(-2.*d+0.*m+1.*m1+2.*ff+2.*om)+
+				  -10.*cos(0.*d+0.*m-1.*m1+2.*ff+1.*om)+
+				   -8.*cos(2.*d+0.*m-1.*m1+0.*ff+1.*om)+
+					7.*cos(-2.*d+2.*m+0.*m1+2.*ff+2.*om)+
+					9.*cos(0.*d+1.*m+0.*m1+0.*ff+1.*om)+
+					7.*cos(-2.*d+0.*m+1.*m1+0.*ff+1.*om)+
+					6.*cos(0.*d-1.*m+0.*m1+0.*ff+1.*om)+
+					5.*cos(2.*d+0.*m-1.*m1+2.*ff+1.*om)+
+					3.*cos(2.*d+0.*m+1.*m1+2.*ff+2.*om)+
+				   -3.*cos(0.*d+1.*m+0.*m1+2.*ff+2.*om)+
+					3.*cos(0.*d-1.*m+0.*m1+2.*ff+2.*om)+
+					3.*cos(2.*d+0.*m+0.*m1+2.*ff+1.*om)+
+				   -3.*cos(-2.*d+0.*m+2.*m1+2.*ff+2.*om)+
+				   -3.*cos(-2.*d+0.*m+1.*m1+2.*ff+1.*om)+
+					3.*cos(2.*d+0.*m-2.*m1+0.*ff+1.*om)+
+					3.*cos(2.*d+0.*m+0.*m1+0.*ff+1.*om)+
+					3.*cos(-2.*d-1.*m+0.*m1+2.*ff+1.*om)+
+					3.*cos(-2.*d+0.*m+0.*m1+0.*ff+1.*om)+
+					3.*cos(0.*d+0.*m+2.*m1+2.*ff+1.*om);
+	
+	depo=depo*0.0001/3600.;
+	
+	ob=PrimeAngle(epo+depo);
+	ob=ob*deg2rad;
+
+	return ob;
+}
+
 void FindMoon(daynum)
 double daynum;
 {
@@ -4122,7 +4325,7 @@ double daynum;
 
 	double	jd, t, t1, t2, t3, t4, d, ff, l1, m, m1, ex, p, 
 		a1, a2, a3, l, b, moonr, r, lm, h, ra, dec, z, ob, n, 
-		e, el, az, teg, th, mm, dv, xom;
+		e, u, S, C, dra, el, az, teg, dnut, th, mm, dv, xom;
 
 	jd=daynum+2444238.5;
 
@@ -4364,13 +4567,8 @@ double daynum;
 	b=FixAngle(b);
 
 	/* Convert ecliptic coordinates to equatorial coordinates */
-	ob=  (23.+26./60.+21.448/3600.)
-		-(46.8150/3600.)*t
-		-(0.00059/3600.)*t2
-		+(0.001813/3600.)*t3;
-	ob=PrimeAngle(ob);
-	ob=ob*deg2rad;
-	
+	ob=Obliquity(daynum);
+				
 	ra=atan2(sin(lm)*cos(ob)-tan(b)*sin(ob),cos(lm));
 	dec=asin(sin(b)*cos(ob)+cos(b)*sin(ob)*sin(lm));
 
@@ -4381,20 +4579,38 @@ double daynum;
 	e=-qth.stnlong*deg2rad;  /* East longitude of tracking station */
 
 	/* Find siderial time in radians */
-	teg=280.46061837+360.98564736629*(jd-2451545.0)+(0.000387933*t-t*t/38710000.0)*t;
-
+	teg=280.46061837+360.98564736629*(jd-2451545.0)+
+		(0.000387933*t-t*t/38710000.0)*t;
+	dnut=Nutation(daynum);
+	teg=teg+(dnut*cos(ob)/15.)/3600.;
+	
 	while (teg>360.0)
 		teg-=360.0;
 	while (teg<0.0)
 		teg+=360.0;
-	
+
 	th=FixAngle((teg-qth.stnlong)*deg2rad);
 	h=th-ra;
+
+	/* Parallax Correction */
+	/* Pg. 82, 279 - 282 - Astronomical Algorithms by Jean Meeus	*/
+	u=atan2(0.99664719*tan(qth.stnlat*deg2rad),1.);
+	S=0.99664719*sin(u)+qth.stnlat*sin(qth.stnlat*deg2rad)/6378140.;
+	C=cos(u)+qth.stnlat*cos(qth.stnlat*deg2rad)/6378140.;
+
+	dra=-C*sin(p)*sin(h)/(cos(dec)-C*sin(p)*cos(h));
+	dec=(sin(dec)-S*sin(p))*cos(dra)/(cos(dec)-C*sin(p)*cos(h));
+	ra=ra+dra;
 
 	az=atan2(sin(h),cos(h)*sin(n)-tan(dec)*cos(n))+pi;
 	el=asin(sin(n)*sin(dec)+cos(n)*cos(dec)*cos(h));
 	
-	el=el+((1./tan(el/deg2rad+7.31/(el/deg2rad+4.4)))/60.)*deg2rad;
+	/* Correction to adjust for atmospheric refraction 			*/
+	/* Pg. 105 - 108 - Astronomical Algorithms by Jean Meeus	*/
+	if (el>15.*deg2rad)
+	{
+		el=el+((58.267*tan(pi/2.-el)-0.0824*pow(tan(pi/2.-el),3))/3600.)*deg2rad;
+	}
 	
 	moon_az=az/deg2rad;
 	moon_el=el/deg2rad;
