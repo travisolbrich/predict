@@ -4612,8 +4612,6 @@ double daynum;
 		el=el+((58.267*tan(pi/2.-el)-0.0824*pow(tan(pi/2.-el),3))/3600.)*deg2rad;
 	}
 
-	el=el+((1./tan(el/deg2rad+7.31/(el/deg2rad+4.4)))/60.)*deg2rad;
-	
 	moon_az=az/deg2rad;
 	moon_el=el/deg2rad;
 
