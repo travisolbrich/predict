@@ -6306,8 +6306,8 @@ char speak;
 		mvprintw(20,5,"   Sun   ");
 		mvprintw(21,5,"---------");
 		attrset(COLOR_PAIR(3)|A_BOLD);
-		mvprintw(22,5,"%-7.2fAz",sun_azi);
-		mvprintw(23,4," %+-6.2f El",sun_ele);
+		mvprintw(22,4,"%7.2f Az",sun_azi);
+		mvprintw(23,4,"%7.2f El",sun_ele);
 
 		FindMoon(daynum);
 
@@ -6315,9 +6315,9 @@ char speak;
 		mvprintw(20,65,"  Moon  ");
 		mvprintw(21,65,"---------");
 		attrset(COLOR_PAIR(3)|A_BOLD);
-		mvprintw(22,65,"%-7.2fAz",moon_az);
-		mvprintw(23,64," %+-6.2f El",moon_el);
-		mvprintw(24,64,"  %+-1.2f Ill.",moon_ill);
+		mvprintw(22,64,"%7.2f Az",moon_az);
+		mvprintw(23,64,"%7.2f El",moon_el);
+		mvprintw(24,64,"%7.2f Ill.",moon_ill);
 
 		if (geostationary==1 && sat_ele>=0.0)
 		{
@@ -6611,8 +6611,8 @@ void MultiTrack()
 				mvprintw(17,5,"   Sun   ");
 				mvprintw(18,5,"---------");
 				attrset(COLOR_PAIR(3)|A_BOLD);
-				mvprintw(19,5,"%-7.2fAz",sun_azi);
-				mvprintw(20,4," %+-6.2f El",sun_ele);
+				mvprintw(19,4,"%7.2f Az",sun_azi);
+				mvprintw(20,4,"%7.2f El",sun_ele);
 
 				FindMoon(daynum);
 
@@ -6620,9 +6620,9 @@ void MultiTrack()
 				mvprintw(17,66,"  Moon  ");
 				mvprintw(18,66,"---------");
 				attrset(COLOR_PAIR(3)|A_BOLD);
-				mvprintw(19,66,"%-7.2fAz",moon_az);
-				mvprintw(20,65," %+-6.2f El",moon_el);
-				mvprintw(21,64,"   %+-1.2f Ill.",moon_ill);
+				mvprintw(19,65,"%7.2f Az",moon_az);
+				mvprintw(20,65,"%7.2f El",moon_el);
+				mvprintw(21,65,"%7.2f Ill.",moon_ill);
 
 				/* Calculate Next Event (AOS/LOS) Times */
 
