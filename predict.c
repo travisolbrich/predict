@@ -4316,7 +4316,7 @@ double Obliquity(double daynum)
 double Illuminated_Fraction_of_Moon(double d, double m, double m1)
 {
 	/* "The illuminated fraction k of the disk of the moon */
-	/* depends on teh selenocentric elongatin of the Earth */
+	/* depends on the selenocentric elongatin of the Earth */
 	/* from the Sun, called the phase angle (i).		   */
 	
 	double k, i;
