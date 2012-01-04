@@ -1435,7 +1435,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		vx=y5*temp-snlamb;
 		temp=2.*(y5*cslamb+y4*snlamb);
 		uy=-y4*temp+snlamb;
-		vy=-y5*temp-cslamb;
+		vy=-y5*temp+cslamb;
 		temp=2.*sqrt(1.-y4*y4-y5*y5);
 		uz=y4*temp;
 		vz=y5*temp;		
