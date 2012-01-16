@@ -3607,7 +3607,7 @@ void SaveQTH()
 	/* This function saves QTH data to the QTH data file. */
 	
 	//Catch a bad mode
-	if(qth.mode>3||qth.mode<0)
+	if(qth.mode>2||qth.mode<0)
 		qth.mode = 1;
 	
 	FILE *fd;	
