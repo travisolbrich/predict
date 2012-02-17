@@ -4313,6 +4313,62 @@ double Obliquity(double daynum)
 	return ob;
 }
 
+void Venus(daynum)
+double daynum;
+{
+	/* This function determines the position of the Venus, including
+	   the azimuth and elevation headings, relative to the latitude
+	   and longitude of the tracking station. */
+	   
+	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
+
+	double	jd, t, l0;
+
+	jd=daynum+2444238.5;
+	
+	t=(jd-2451545.0)/365250.0;
+	
+	l0= 440250710*cos(0.        +     0.*t)+
+		 40989415*cos(1.48302034+ 26087.90314157*t)+
+		  5046294*cos(4.4778549 + 52175.8062831*t)+
+		   855347*cos(1.165203  + 78263.709425*t)+
+		   165590*cos(4.119692  +104351.612566*t)+
+		    34562*cos(0.77931   +130439.51571*t)+
+		     7583*cos(3.7135    +156527.4188*t)+
+		     3560*cos(1.5120    +  1109.3786*t)+
+		     1803*cos(4.1033    +  5661.3320*t)+
+		     1726*cos(0.3583    +182615.3220*t)+
+		     1509*cos(2.9951    + 25028.5212*t)+
+		     1365*cos(4.5992    + 27197.2817*t)+
+		     1017*cos(0.8803    + 21749.2352*t)+
+		      714*cos(1.541     + 24978.525*t)+
+		      644*cos(5.303     + 21535.950*t)+
+		      451*cos(6.050     + 51116.424*t)+
+		      404*cos(3.282     +208703.225*t)+
+		      352*cos(5.242     + 20426.571*t)+
+		      345*cos(2.792     + 15874.618*t)+
+		      343*cos(5.765     +   955.600*t)+
+		      339*cos(5.863     + 25558.212*t)+
+		      325*cos(1.337     + 53285.185*t)+
+		      273*cos(2.495     +   529.691*t)+
+		      264*cos(3.917     + 57837.138*t)+
+		      260*cos(0.987     +  4551.953*t)+
+		      239*cos(0.113     +  1059.382*t)+
+		      235*cos(0.267     + 11322.664*t)+
+		      217*cos(0.660     + 13521.751*t)+
+		      209*cos(2.092     + 47623.853*t)+
+		      183*cos(2.629     + 27043.503*t)+
+		      182*cos(2.434     + 25661.305*t)+
+		      176*cos(4.536     + 51066.428*t)+
+		      173*cos(2.452     + 24498.830*t)+
+		      142*cos(3.360     + 37410.567*t)+
+		      138*cos(0.291     + 10213.286*t)+
+		      125*cos(3.721     + 39609.655*t)+
+		      118*cos(2.781     + 77204.327*t)+
+		      106*cos(4.206     + 19804.827*t);
+
+}
+
 double Illuminated_Fraction_of_Moon(double d, double m, double m1)
 {
 	/* "The illuminated fraction k of the disk of the moon */
