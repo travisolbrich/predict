@@ -4322,7 +4322,7 @@ double daynum;
 	   
 	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
 
-	double	jd, t, l0, l1;
+	double	jd, t, l0, l1, l2;
 
 	jd=daynum+2444238.5;
 	
