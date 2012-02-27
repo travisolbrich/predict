@@ -172,7 +172,8 @@ double	tsince, jul_epoch, jul_utc, eclipse_depth=0,
 	sun_azi, sun_ele, daynum, fm, fk, age, aostime,
 	lostime, ax, ay, az, rx, ry, rz, squint, alat, alon,
 	sun_ra, sun_dec, sun_lat, sun_lon, sun_range, sun_range_rate,
-	moon_az, moon_el, moon_dx, moon_ra, moon_dec, moon_gha, moon_dv, moon_ill;
+	moon_az, moon_el, moon_dx, moon_ra, moon_dec, moon_gha, moon_dv, 
+	moon_range, moon_ill;
 
 char	qthfile[50], tlefile[50], dbfile[50], temp[80], output[25],
 	serial_port[15], resave=0, reload_tle=0, netport[6],
@@ -4313,7 +4314,7 @@ double Obliquity(double daynum)
 	return ob;
 }
 
-void Venus(daynum)
+void Mercury(daynum)
 double daynum;
 {
 	/* This function determines the position of the Venus, including
@@ -4322,7 +4323,7 @@ double daynum;
 	   
 	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
 
-	double	jd, t, l0, l1, l2;
+	double	jd, t, l0, l1, l2, l3, l4, l5;
 
 	jd=daynum+2444238.5;
 	
@@ -4394,24 +4395,67 @@ double daynum;
 		   39.*cos(4.08    +182615.32*t)+
 		   15.*cos(4.63    +  1109.38*t)+
 		   12.*cos(0.79    +208703.23*t);
-		
+	
+	l3=188.*cos(0.035 + 52175.806*t)+
+	   142.*cos(3.125 + 26087.903*t)+
+	    97.*cos(3.00  + 78263.71*t)+
+	    44.*cos(6.02  +104351.61*t)+
+	    35.*cos(0.    +     0.*t)+
+	    18.*cos(2.78  +130439.52*t)+
+	     7.*cos(5.82  +156527.42*t)+
+	     3.*cos(2.57  +182615.32*t);
+	     
+	l4=114.*cos(3.1416 +   0.*t)+
+		 3.*cos(2.03   + 26087.90*t)+
+		 2.*cos(1.42   + 78263.71*t)+
+	     2.*cos(4.50   + 52175.81*t)+
+	     1.*cos(4.50   + 104351.61*t)+
+	     1.*cos(1.27   + 130439.52*t);
+	     
+	l5=1.*cos(3.14 + 0.*t);
 
 }
 
-double Illuminated_Fraction_of_Moon(double d, double m, double m1)
+void Illuminated_Fraction_of_Moon(daynum)
+double daynum;
 {
 	/* "The illuminated fraction k of the disk of the moon */
 	/* depends on the selenocentric elongatin of the Earth */
 	/* from the Sun, called the phase angle (i).		   */
 	
-	double k, i;
+	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
+	/* Pg. 345 to 347 - Position of the moon.						*/
+
+
+	double cos_psi, sin_psi, tan_i, i, k;
 	
-	i=pi-d-(6.289*sin(m1)+2.100*sin(m)-1.274*sin(2*d-m1)-0.658*sin(2*d)
-		-0.214*sin(2*m1)-0.110*sin(d))*deg2rad;
+	FindSun(daynum);
+	FindMoon(daynum);
+	
+	sun_ra=sun_ra*deg2rad;
+	sun_dec=sun_dec*deg2rad;
+	
+	moon_ra=moon_ra*deg2rad;
+	moon_dec=moon_dec*deg2rad;
+	
+	sun_range=sun_range*AU;
+	
+	cos_psi=sin(sun_dec)*sin(moon_dec)+
+			cos(sun_dec)*cos(moon_dec)*cos(sun_ra-moon_ra);
+	
+	sin_psi=sin(acos(cos_psi));
+	
+	tan_i=(sun_range*sin_psi)/(moon_range-sun_range*cos_psi);
+
+	i=atan(tan_i);
+	
+	if (i<0.)
+		i+=pi;
 	
 	k=(1.+cos(i))/2.;
-	
-	return k;
+
+	moon_ill=k;
+
 }
 
 void FindMoon(daynum)
@@ -4425,8 +4469,9 @@ double daynum;
 	/* Pg. 337 to 344 - Position of the moon.						*/
 
 	double	jd, t, t1, t2, t3, t4, d, ff, l1, m, m1, ex, p, 
-		a1, a2, a3, l, b, moonr, r, lm, h, ra, dec, z, ob, n, 
-		e, u, S, C, dra, el, az, teg, dnut, th, mm, dv, xom, k;
+		a1, a2, a3, l, b, moon_range, r, lm, h, ra, dec, z, 
+		ob, n, e, u, S, C, dra, el, az, teg, dnut, th, mm, 
+		dv, xom, k;
 
 	jd=daynum+2444238.5;
 
@@ -4655,11 +4700,11 @@ double daynum;
 	/* Coordinates of the Moon */
 	lm=Degrees(l1)+lm/1000000.;	//Degrees
 	b=b/1000000.;				//Degrees
-	moonr=385000.56+r/1000.;	//km
+	moon_range=385000.56+r/1000.;	//km
 
-	moon_dx=moonr/385000.56;	//Unitless km/km
+	moon_dx=moon_range/385000.56;	//Unitless km/km
 	
-	p=asin(6378.14/moonr);		//Radians
+	p=asin(6378.14/moon_range);		//Radians
 	
 	lm=Radians(lm);
 	b=Radians(b);
@@ -4737,10 +4782,7 @@ double daynum;
 
 	if (moon_gha<0.0)
 		moon_gha+=360.0;
-		
-	/* Illuminated Fraction of the Moon							*/
-	k=Illuminated_Fraction_of_Moon(d,m,m1);
-	moon_ill=k;
+
 }
 
 void FindSun(daynum)
@@ -6395,6 +6437,7 @@ char speak;
 		mvprintw(23,4,"%7.2f El",sun_ele);
 
 		FindMoon(daynum);
+		Illuminated_Fraction_of_Moon(daynum);
 
 		attrset(COLOR_PAIR(4)|A_BOLD);
 		mvprintw(20,65,"  Moon  ");
@@ -6700,6 +6743,7 @@ void MultiTrack()
 				mvprintw(20,4,"%7.2f El",sun_ele);
 
 				FindMoon(daynum);
+				Illuminated_Fraction_of_Moon(daynum);
 
 				attrset(COLOR_PAIR(4)|A_BOLD);
 				mvprintw(17,66,"  Moon  ");
@@ -6800,7 +6844,7 @@ void MultiTrack()
 				if (ok2predict[satindex[x]] && aos2[x]!=0.0)
 				{
 					//Calculate max pass (EXPERIMENTAL)
-					int maxel = 0;
+					int maxel =  0;
 					int lastel = 0;
 					indx=(int)satindex[x];
 					//qmvprintw(x,1,"%2i",indx);
@@ -6819,7 +6863,7 @@ void MultiTrack()
 						Calc();
 					}								
 					//End calculate max pass
-					
+										
 					
 					mvprintw(y+19,17,"%10s +%2i on %s UTC",Abbreviate(sat[(int)satindex[x]].name,9), maxel, Daynum2String(aos2[x]));
 
