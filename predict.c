@@ -4317,9 +4317,8 @@ double Obliquity(double daynum)
 void Mercury(daynum)
 double daynum;
 {
-	/* This function determines the position of the Venus, including
-	   the azimuth and elevation headings, relative to the latitude
-	   and longitude of the tracking station. */
+	/* This function determines the position of the Mercury in a    */
+	/* heliocentric universe.									    */
 	   
 	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
 	/* Pg. 217 to 221 & App. III - Positions of the Planets.		*/	
@@ -4537,7 +4536,7 @@ double daynum;
 	/* Pg. 345 to 347 - Illuminated Fraction of the Moon.			*/
 
 
-	double cos_psi, sin_psi, tan_i, i, k;
+	double cos_psi, sin_psi, tan_chi, tan_i, i, k;
 	
 	FindSun(daynum);
 	FindMoon(daynum);
@@ -4554,6 +4553,9 @@ double daynum;
 			cos(sun_dec)*cos(moon_dec)*cos(sun_ra-moon_ra);
 	
 	sin_psi=sin(acos(cos_psi));
+	
+	tan_chi=(cos(sun_dec)*sin(sun_ra-moon_ra))/
+			(sin(sun_ra)*cos(moon_dec)-cos(sun_dec)*sin(moon_dec)*cos(sun_ra-moon_ra));
 	
 	tan_i=(sun_range*sin_psi)/(moon_range-sun_range*cos_psi);
 
