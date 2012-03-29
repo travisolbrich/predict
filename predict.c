@@ -7580,6 +7580,7 @@ void planets()
 	do
 	{
 		daynum=CurrentDaynum();
+		PreCalc(1);
 		Calc();
 
 		FindSun(daynum);
@@ -7611,9 +7612,8 @@ void planets()
 		ans=tolower(getch());
 
 	} while (ans!='q' && ans!=27);
-
-	refresh();
-	clear();
+	
+	cbreak();
 
 }
 
