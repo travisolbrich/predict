@@ -7566,19 +7566,22 @@ void planets()
 	//printw("                                                                                ");
 
 	attrset(COLOR_PAIR(2)|A_REVERSE);
-	printw(" Planet Az El %s %s Distance ",(io_lat=='N'?"LatN":"LatS"),(io_lon=='W'?"LonW":"LonE"),(io_lat=='N'?"LatN":"LatS"),(io_lon=='W'?"LonW":"LonE"));
+	printw(" Planet  | Az | El | %s | %s | Distance 567895123456789612345678971234567898",(io_lat=='N'?"LatN":"LatS"),(io_lon=='W'?"LonW":"LonE"),(io_lat=='N'?"LatN":"LatS"),(io_lon=='W'?"LonW":"LonE"));
+	printw("12345678901234567892123456789312345678941234567895123456789612345678971234567898");
 	attrset(COLOR_PAIR(2));
-	mvprintw(5,1,"Mercury");
-	mvprintw(6,1,"Venus");
-	mvprintw(7,1,"Mars");
-	mvprintw(8,1,"Jupiter");
-	mvprintw(9,1,"Saturn");
-	mvprintw(10,1,"Uranus");
-	mvprintw(11,1,"Neptune");
-	mvprintw(12,1,"Pluto");
 	
 	do
 	{
+		attrset(COLOR_PAIR(2));
+		mvprintw(5,1,"Mercury ");
+		mvprintw(6,1,"Venus   ");
+		mvprintw(7,1,"Mars    ");
+		mvprintw(8,1,"Jupiter ");
+		mvprintw(9,1,"Saturn  ");
+		mvprintw(10,1,"Uranus  ");
+		mvprintw(11,1,"Neptune ");
+		mvprintw(12,1,"Pluto   ");
+
 		daynum=CurrentDaynum();
 		PreCalc(1);
 		Calc();
