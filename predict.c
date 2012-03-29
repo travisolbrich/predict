@@ -7551,12 +7551,7 @@ void planets()
 	   until 'Q' or ESC is pressed.  Coordinates
 	   for the Sun and Moon are also displayed. */
 
-	int		x, y, z, ans;
-
-	unsigned char	satindex[24], inrange[24], sunstat=0, ok2predict[24];
-
-	double		aos[24], aos2[24], temptime,
-			nextcalctime=0.0, los[24], aoslos[24];
+	int ans;
 
 	if (xterm)
 		fprintf(stderr,"\033]0;PREDICT: Planetary Prediction Mode\007");
@@ -7585,7 +7580,6 @@ void planets()
 	do
 	{
 		daynum=CurrentDaynum();
-		PreCalc(indx);
 		Calc();
 
 		FindSun(daynum);
@@ -7617,6 +7611,9 @@ void planets()
 		ans=tolower(getch());
 
 	} while (ans!='q' && ans!=27);
+
+	refresh();
+	clear();
 
 }
 
