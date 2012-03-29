@@ -7566,7 +7566,7 @@ void planets()
 	//printw("                                                                                ");
 
 	attrset(COLOR_PAIR(2)|A_REVERSE);
-	printw(" Planet  | Az | El | %s | %s | Distance 567895123456789612345678971234567898",(io_lat=='N'?"LatN":"LatS"),(io_lon=='W'?"LonW":"LonE"),(io_lat=='N'?"LatN":"LatS"),(io_lon=='W'?"LonW":"LonE"));
+	printw(" Planet  | Az | El | RA | Dec | %s | %s | Distance 6789612345678971234567898",(io_lat=='N'?"LatN":"LatS"),(io_lon=='W'?"LonW":"LonE"),(io_lat=='N'?"LatN":"LatS"),(io_lon=='W'?"LonW":"LonE"));
 	printw("12345678901234567892123456789312345678941234567895123456789612345678971234567898");
 	attrset(COLOR_PAIR(2));
 	
