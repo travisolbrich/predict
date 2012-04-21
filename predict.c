@@ -174,6 +174,9 @@ double	tsince, jul_epoch, jul_utc, eclipse_depth=0,
 	sun_ra, sun_dec, sun_lat, sun_lon, sun_range, sun_range_rate,
 	moon_az, moon_el, moon_dx, moon_ra, moon_dec, moon_gha, moon_dv, 
 	moon_range, moon_ill;
+	
+//For planetary predictions	
+double  solar_coord[3], mercury[20], venus[20], earth[3], mars[20];
 
 char	qthfile[50], tlefile[50], dbfile[50], temp[80], output[25],
 	serial_port[15], resave=0, reload_tle=0, netport[6],
@@ -690,6 +693,7 @@ void Calculate_Solar_Position(double time, vector_t *solar_vector)
 	solar_vector->y=R*sin(Lsa)*cos(eps);
 	solar_vector->z=R*sin(Lsa)*sin(eps);
 	solar_vector->w=R;
+
 }
 
 int Sat_Eclipsed(vector_t *pos, vector_t *sol, double *depth)
@@ -4317,219 +4321,112 @@ double Obliquity(double daynum)
 void Mercury(daynum)
 double daynum;
 {
-	/* This function determines the position of the Mercury in a    */
+	/* This function determines the orbital elements of Mercury in a*/
 	/* heliocentric universe.									    */
 	   
 	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
-	/* Pg. 217 to 221 & App. III - Positions of the Planets.		*/	
+	/* Pg. 209 to 216 - Elements of Planetary Orbits.				*/	
 
-	double	jd, t, l0, l1, l2, l3, l4, l5, b0, b1, b2, b3, b4, 
-	r0, r1, r2, r3, L_mer, B_mer, R_mer;
-
+	double jd, t, L, a, e, i, Uomega, ppi, M, Lomega;
+	
 	jd=daynum+2444238.5;
 	
-	t=(jd-2451545.0)/365250.0;
+	t=(jd-2451545.0)/36525.0;
 	
-	l0=440250710.*cos(0.        +     0.*t)+
-		40989415.*cos(1.48302034+ 26087.90314157*t)+
-		 5046294.*cos(4.4778549 + 52175.8062831*t)+
-		  855347.*cos(1.165203  + 78263.709425*t)+
-		  165590.*cos(4.119692  +104351.612566*t)+
-		   34562.*cos(0.77931   +130439.51571*t)+
-		    7583.*cos(3.7135    +156527.4188*t)+
-		    3560.*cos(1.5120    +  1109.3786*t)+
-		    1803.*cos(4.1033    +  5661.3320*t)+
-		    1726.*cos(0.3583    +182615.3220*t)+
-		    1509.*cos(2.9951    + 25028.5212*t)+
-		    1365.*cos(4.5992    + 27197.2817*t)+
-		    1017.*cos(0.8803    + 21749.2352*t)+
-		     714.*cos(1.541     + 24978.525*t)+
-		     644.*cos(5.303     + 21535.950*t)+
-		     451.*cos(6.050     + 51116.424*t)+
-		     404.*cos(3.282     +208703.225*t)+
-		     352.*cos(5.242     + 20426.571*t)+
-		     345.*cos(2.792     + 15874.618*t)+
-		     343.*cos(5.765     +   955.600*t)+
-		     339.*cos(5.863     + 25558.212*t)+
-		     325.*cos(1.337     + 53285.185*t)+
-		     273.*cos(2.495     +   529.691*t)+
-		     264.*cos(3.917     + 57837.138*t)+
-		     260.*cos(0.987     +  4551.953*t)+
-		     239.*cos(0.113     +  1059.382*t)+
-		     235.*cos(0.267     + 11322.664*t)+
-		     217.*cos(0.660     + 13521.751*t)+
-		     209.*cos(2.092     + 47623.853*t)+
-		     183.*cos(2.629     + 27043.503*t)+
-		     182.*cos(2.434     + 25661.305*t)+
-		     176.*cos(4.536     + 51066.428*t)+
-		     173.*cos(2.452     + 24498.830*t)+
-		     142.*cos(3.360     + 37410.567*t)+
-		     138.*cos(0.291     + 10213.286*t)+
-		     125.*cos(3.721     + 39609.655*t)+
-		     118.*cos(2.781     + 77204.327*t)+
-		     106.*cos(4.206     + 19804.827*t);
-     
-	l1=2608814706223.*cos(0.       +     0.*t)+
-		     1126008.*cos(6.2170397+ 26087.9031316*t)+
-		      303471.*cos(3.055655 + 52175.806283*t)+
-		       80538.*cos(6.10455  + 78263.70942*t)+
-		       21245.*cos(2.83532  +104351.61257*t)+
-		        5592.*cos(5.8628   +130439.5157*t)+
-		        1472.*cos(2.5185   +156527.4188*t)+
-		         388.*cos(5.480    +182615.322*t)+
-		         352.*cos(3.052    +  1109.379*t)+
-		         103.*cos(2.149    +208703.225*t)+
-		          94.*cos(6.12     + 27197.28*t)+
-		          91.*cos(0.00     + 24978.52*t)+
-		          52.*cos(5.62     +  5661.33*t)+
-		          44.*cos(4.57     + 25028.52*t)+
-		          28.*cos(3.04     + 51066.43*t)+
-		          27.*cos(5.09     +234791.13*t);
-		          
-	l2=52050.*cos(0.     +     0.*t)+
-	   16904.*cos(4.69072+ 26087.90314*t)+
-		7397.*cos(1.3474 + 52175.8063*t)+
-		3018.*cos(4.4564 + 78263.7094*t)+
-		1107.*cos(1.2623 +104351.6126*t)+
-		 378.*cos(4.320  +130439.516*t)+
-		 123.*cos(1.069  +156527.419*t)+
-		  39.*cos(4.08   +182615.32*t)+
-		  15.*cos(4.63   +  1109.38*t)+
-		  12.*cos(0.79   +208703.23*t);
+	L=252.250906+(149474.0722491*t)+
+				 (     0.00030350*t*t)+
+				 (	   0.000000018*t*t*t);
+	
+	a=0.387098310;
+	
+	e=0.20563175+( 0.000020407*t)+
+				 (-0.0000000283*t*t)+
+				 (-0.00000000018*t*t*t);
+	
+	i=7.004986+( 0.0018615*t)+
+			   (-0.00001810*t*t)+
+			   ( 0.000000056*t*t*t);
 
-	l3=188.*cos(0.035+ 52175.806*t)+
-	   142.*cos(3.125+ 26087.903*t)+
-	    97.*cos(3.00 + 78263.71*t)+
-	    44.*cos(6.02 +104351.61*t)+
-	    35.*cos(0.   +     0.*t)+
-	    18.*cos(2.78 +130439.52*t)+
-	     7.*cos(5.82 +156527.42*t)+
-	     3.*cos(2.57 +182615.32*t);
-	     
-	l4=114.*cos(3.1416+   0.*t)+
-		 3.*cos(2.03  + 26087.90*t)+
-		 2.*cos(1.42  + 78263.71*t)+
-	     2.*cos(4.50  + 52175.81*t)+
-	     1.*cos(4.50  + 104351.61*t)+
-	     1.*cos(1.27  + 130439.52*t);
-	     
-	l5=1.*cos(3.14+0.*t);
+	Uomega=48.330893+(1.1861883*t)+
+					 (0.00017542*t*t)+
+					 (0.000000215*t*t*t);
+					 
+	ppi=77.456119+(1.5564776*t)+
+				  (0.00029544*t*t)+
+				  (0.000000009*t*t*t);
 	
-	b0=11737529.*cos(1.98357499+ 26087.90314157*t)+
-		2388077.*cos(5.0373896 + 52175.8062831*t)+
-		1222840.*cos(3.1415927 +     0.*t)+
-		 543252.*cos(1.796444  + 78263.709425*t)+
-		 129779.*cos(4.832325  +104351.612566*t)+
-		  31867.*cos(1.58088   +130439.51571*t)+
-		   7963.*cos(4.6097    +156527.4188*t)+
-		   2014.*cos(1.3532    +182615.3220*t)+
-		    514.*cos(4.378     +208703.225*t)+
-		    209.*cos(2.020     + 24978.525*t)+
-		    208.*cos(4.918     + 27197.282*t)+
-		    132.*cos(1.119     +234791.128*t)+
-		    121.*cos(1.813     + 53285.185*t)+
-		    100.*cos(5.657     + 20426.571*t);
-		    
-	b1=429151.*cos(3.501698+ 26087.903142*t)+
-	   146234.*cos(3.141593+     0.*t)+
-		22675.*cos(0.01515 + 52175.80628*t)+
-		10895.*cos(0.48540 + 78263.70942*t)+
-		 6353.*cos(3.4294  +104351.6126*t)+
-		 2496.*cos(0.1605  +130439.5157*t)+
-		  860.*cos(3.185   +156527.419*t)+
-		  278.*cos(6.210   +182615.322*t)+
-		   86.*cos(2.95    +208703.23*t)+
-		   28.*cos(0.29    + 27197.28*t)+
-		   26.*cos(5.98    +234791.13*t);
+	L=PrimeAngle(L);
+	
+	M=L-ppi;
+	Lomega=ppi-Uomega;
+	
+	mercury[1]=L;
+	mercury[2]=a;
+	mercury[3]=e;
+	mercury[4]=i;
+	mercury[5]=Uomega;
+	mercury[6]=ppi;
+	mercury[7]=M;
+	mercury[8]=Lomega;
+}
 
-
-	b2=11831.*cos(4.79066+ 26087.90314*t)+
-	    1914.*cos(0.     +     0.*t)+
-	    1045.*cos(1.2122 + 52175.8063*t)+
-	     266.*cos(4.434  + 78263.709*t)+
-	     170.*cos(1.623  +104351.613*t)+
-	      96.*cos(4.80   +130439.52*t)+
-	      45.*cos(1.61   +156527.42*t)+
-	      18.*cos(4.67   +182615.32*t)+
-	       7.*cos(1.43   +208703.23*t);
- 
-    b3=235.*cos(0.354+ 26087.903*t)+
-       161.*cos(0.   +     0.*t)+
-        19.*cos(4.36 + 52175.81*t)+
-         6.*cos(2.51 + 78263.71*t)+
-         5.*cos(6.14 +104351.61*t)+
-         3.*cos(3.12 +130439.52*t)+
-         2.*cos(6.27 +156527.42*t);
-	  
-    b4=4.*cos(1.75+26087.90*t)+
-       1.*cos(3.14+    0.*t);
-    
-	r0=39528272.*cos(0.       +     0.*t);
-        7834132.*cos(6.1923372+ 26087.9031416*t)+
-         795526.*cos(2.959897 + 52175.806283*t)+
-         121282.*cos(6.010642 + 78263.709425*t)+
-          21922.*cos(2.77820  +104351.61257*t)+
-           4354.*cos(5.8289   +130439.5157*t)+
-            918.*cos(2.597    +156527.419*t)+
-            290.*cos(1.424    + 25028.521*t)+
-            260.*cos(3.028    + 27197.282*t)+
-            202.*cos(5.647    +182615.322*t)+
-            201.*cos(5.592    + 31749.235*t)+
-            142.*cos(6.253    + 24978.525*t)+
-            100.*cos(3.734    + 21535.950*t);
-
-	r1=217348.*cos(4.656172+ 26087.903142*t)+
-         44142.*cos(1.42386+ 52175.80628*t)+
-         10094.*cos(4.47466+ 78263.70942*t)+
-          2433.*cos(1.2423 +104351.6126*t)+
-          1624.*cos(0.     +     0.*t)+
-           604.*cos(4.293  +130439.516*t)+
-           153.*cos(1.061  +156527.419*t)+
-            39.*cos(4.11   +182615.32*t);
-
-	r2=3118.*cos(3.0823+ 26087.9031*t)+
-       1245.*cos(6.1518+ 52175.8063*t)+
-        425.*cos(2.926 + 78263.709*t)+
-        136.*cos(5.980 +104351.613*t)+
-         42.*cos(2.75  +130439.52*t)+
-         22.*cos(3.14  +     0.*t)+
-         13.*cos(5.80  +156527.42*t);
-
-	r3=33.*cos(1.68+ 26087.90*t)+
-       24.*cos(4.63+ 52175.81*t)+
-       12.*cos(1.39+ 78263.71*t)+
-        5.*cos(4.44+104351.61*t)+
-        2.*cos(1.21+130439.52*t);
-        
-	l1=l1*t;
-	l2=l2*t*t;
-	l3=l3*t*t*t;
-	l4=l4*t*t*t*t;
-	l5=l5*t*t*t*t*t;
+void Venus(daynum)
+double daynum;
+{
+	/* This function determines the orbital elements of Venus in a  */
+	/* heliocentric universe.									    */
+	   
+	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
+	/* Pg. 209 to 216 - Elements of Planetary Orbits.				*/
 	
-	b1=b1*t;
-	b2=b2*t*t;
-	b3=b3*t*t*t;
-	b4=b4*t*t*t*t;
+	double jd, t, L, a, e, i, Uomega, ppi, M, Lomega;
 	
-	r1=r1*t;
-	r2=r2*t*t;
-	r3=r3*t*t*t;
+	jd=daynum+2444238.5;
 	
-	L_mer=(l0+l1+l2+l3+l4+l5)/1E8;
-	B_mer=(b0+b1+b2+b3+b4)/1E8;
-	R_mer=(r0+r1+r2+r3)/1E8;
+	t=(jd-2451545.0)/36525.0;
 	
-	L_mer=FixAngle(L_mer);
-	B_mer=FixAngle(B_mer);
+	L=181.979801+(58519.2130302*t)+
+				 (    0.00031014*t*t)+
+				 (    0.000000015*t*t*t);
 	
+	a=0.723329820;
+	
+	e=0.00677192+(-0.000047765*t)+
+				 ( 0.0000000981*t*t)+
+				 ( 0.00000000046*t*t*t);
+	
+	i=3.394662+( 0.0010037*t)+
+			   (-0.00000088*t*t)+
+			   (-0.000000007*t*t*t);
+	
+	Uomega=76.679920+( 0.9011206*t)+
+					 ( 0.00040618*t*t)+
+					 (-0.000000093*t*t*t);
+	
+	ppi=131.563703+( 1.4022288*t)+
+				   (-0.00107618*t*t)+
+				   (-0.000005678*t*t*t);
+	
+	L=PrimeAngle(L);
+	
+	M=L-ppi;
+	Lomega=ppi-Uomega;
+	
+	venus[1]=L;
+	venus[2]=a;
+	venus[3]=e;
+	venus[4]=i;
+	venus[5]=Uomega;
+	venus[6]=ppi;
+	venus[7]=M;
+	venus[8]=Lomega;
 }
 
 void Earth(daynum)
 double daynum;
 {
 	/* This function determines the position of the Earth in a      */
-	/* heliocentric universe.									    */
+	/* heliocentric universe and is used to extract the sun position*/
 	   
 	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
 	/* Pg. 217 to 221 & App. III - Positions of the Planets.		*/	
@@ -4680,12 +4577,53 @@ double daynum;
 		102.*cos(5.422+ 5507.553*t)+
 		 80.*cos(3.88 + 5223.69*t)+
 		 44.*cos(3.70 + 2352.87*t)+
-		 32.*cos(34.00+ 1577.34*t);
+		 32.*cos(4.00 + 1577.34*t);
 	
 	b1= 9.*cos(3.90+5507.55*t)+
 		6.*cos(1.73+5223.69*t);
 		
-	r0= 103019.*cos(1.107490+ 6283.075850*t)+
+	r0= 100013989.*cos(0.+0*t)+
+		  1670700.*cos(3.0984635+  6283.0758500*t)+
+		    13956.*cos(3.05525  + 12566.15170*t)+
+             3084.*cos(5.1985   + 77713.7715*t)+
+		 	 1628.*cos(1.1739   +  5753.3849*t)+
+			 1576.*cos(2.8469   +  7860.4194*t)+
+			  925.*cos(5.453    + 11506.770*t)+
+			  542.*cos(4.564    +  3930.210*t)+
+			  472.*cos(3.661    +  5884.927*t)+
+			  346.*cos(0.964    +  5507.553*t)+
+			  329.*cos(5.900    +  5223.694*t)+
+			  307.*cos(0.299    +  5573.143*t)+
+			  243.*cos(4.273    + 11790.629*t)+
+			  212.*cos(5.847    +  1577.344*t)+
+			  186.*cos(5.022    + 10977.079*t)+
+			  175.*cos(3.012    + 18849.228*t)+
+			  110.*cos(5.055    +  5486.778*t)+
+			   98.*cos(0.89     +  6069.78*t)+
+			   86.*cos(5.69     + 15720.84*t)+
+			   86.*cos(1.27     +161000.69*t)+
+			   65.*cos(0.27     + 17260.15*t)+
+			   63.*cos(0.92     +   529.69*t)+
+			   57.*cos(2.01     + 83996.85*t)+
+			   56.*cos(5.24     + 71430.70*t)+
+			   49.*cos(3.25     +  2544.31*t)+
+			   47.*cos(2.58     +   775.52*t)+
+			   45.*cos(5.54     +  9437.76*t)+
+			   43.*cos(6.01     +  6275.96*t)+
+			   39.*cos(5.36     +  4694.00*t)+
+			   38.*cos(2.39     +  8827.39*t)+
+			   37.*cos(0.83     + 19651.05*t)+
+			   37.*cos(4.90     + 12139.55*t)+
+			   36.*cos(1.67     + 12036.46*t)+
+			   35.*cos(1.84     +  2942.46*t)+
+			   33.*cos(0.24     +  7084.90*t)+
+			   32.*cos(0.18     +  5088.63*t)+
+			   32.*cos(1.78     +   398.15*t)+
+			   28.*cos(1.21     +  6286.60*t)+
+			   28.*cos(1.90     +  6279.55*t)+
+			   26.*cos(4.59     + 10447.39*t);
+	
+	r1= 103019.*cos(1.107490+ 6283.075850*t)+
 		  1721.*cos(1.0644  +12566.1517*t)+
 		   702.*cos(3.142   +    0.*t)+
 		    32.*cos(1.02    +18849.23*t)+
@@ -4696,14 +4634,14 @@ double daynum;
 		     9.*cos(1.42    + 6275.96*t)+
 		     9.*cos(0.27    + 5486.78*t);
 	
-	r1= 4359.*cos(5.7846+ 6283.0758*t)+
+	r2= 4359.*cos(5.7846+ 6283.0758*t)+
 		 124.*cos(5.579 +12566.152*t)+
 		  12.*cos(3.14  +    0.*t)+
 		   9.*cos(3.63  +77713.77*t)+
 		   6.*cos(1.87  + 5573.14*t)+
 		   3.*cos(5.47  +18849.23*t);
 		   
-	r2= 145.*cos(4.273+ 6283.076*t)+
+	r3= 145.*cos(4.273+ 6823.076*t)+
 		  7.*cos(3.92 +12566.15*t);
 		  
 	r4= 4.*cos(2.56+6283.08*t);
@@ -4728,72 +4666,141 @@ double daynum;
 	L_earth=FixAngle(L_earth);
 	B_earth=FixAngle(B_earth);
 	
+	earth[1]=L_earth;
+	earth[2]=B_earth;
+	earth[3]=R_earth;
+	
 }
 
-void Elliptic_Motion(daynum,L,B,R,L1,B1,R1)
-double daynum, L, B, R, L1, B1, R1;
+void Mars(daynum)
+double daynum;
 {
-	/* In this method, "the geocentric ecliptical longitude and     */
-	/* latitude of a major planet (Mercury to Neptune) are obtained */
-	/* from the heliocentric ecliptical coordinates of the planet 	*/
-	/* and the earth." 												*/
-	
+	/* This function determines the orbital elements of Mars in a   */
+	/* heliocentric universe.									    */
+	   
 	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
-	/* Pg. 223-240 - Elliptic Motion.								*/
+	/* Pg. 209 to 216 - Elements of Planetary Orbits.				*/	
 	
-	double jd, t, x, y, z, delta, tau, lm, beta, e_earth, pi_earth,
-	k, dlm, dbeta, Lp, dnut, ob, ra, dec, n, e, teg, th, h, u, S, C, 
-	dra, p, el, planet_az, planet_el;
+	double jd, t, L, a, e, i, Uomega, ppi, M, Lomega;
 	
 	jd=daynum+2444238.5;
 	
-	t=(jd-2451545.0)/365250.0;
-		
-	x=R*cos(B)*cos(L)-R1*cos(B1)*cos(L1);
-	y=R*cos(B)*sin(L)-R1*cos(B1)*sin(L1);
-	z=R*sin(B)       -R1*sin(B1);
+	t=(jd-2451545.0)/36525.0;
 	
-	delta=sqrt(x*x+y*y+z*z);
+	L=355.433000+(19141.6964471*t)+
+				 (    0.00031052*t*t)+
+				 (    0.000000016*t*t*t);
 	
-	tau=0.0057755183*delta;
+	a=1.523679342;
 	
-	lm=atan2(y,x);
-	beta=atan2(z,sqrt(x*x+y*y));
+	e=0.09340065+( 0.000090484*t)+
+				 (-0.0000000806*t*t)+
+				 (-0.00000000025*t*t*t);
 	
-	e_earth=(0.016708634-0.000042037*t-0.0000001267*t*t)*deg2rad;
-	pi_earth=(102.93737+1.71946*t+0.00046*t*t)*deg2rad;
+	i=1.849726+(-0.0006011*t)+
+			   ( 0.00001276*t*t)+
+			   (-0.000000007*t*t*t);
 	
-	k=20.49552/3600.*deg2rad;
+	Uomega=49.558093+(0.7720959*t)+
+					 (0.00001557*t*t)+
+					 (0.000002267*t*t*t);
 	
-	dlm=(-k*cos(sun_lon*deg2rad-lm)+e_earth*k*cos(pi_earth-lm))/cos(beta);
-	dbeta=-k*sin(beta)*(sin(sun_lon*deg2rad-lm)-e_earth*sin(pi_earth-lm));
+	ppi=336.060234+(1.8410449*t)+
+				   (0.00013477*t*t)+
+				   (0.000000536*t*t*t);
 	
-	lm=lm+dlm;
-	beta=beta+dbeta;
+	L=PrimeAngle(L);
 	
-	Lp=(L-1.397*t-0.00031*t*t)*deg2rad;
+	M=L-ppi;
+	Lomega=ppi-Uomega;
 	
-	dlm=(-0.009033+0.03916*(cos(Lp)+sin(Lp))*tan(B))/3600.*deg2rad;
-	dbeta=(0.03916*(cos(Lp)-sin(Lp)))/3600.*deg2rad;
+	mars[1]=L;
+	mars[2]=a;
+	mars[3]=e;
+	mars[4]=i;
+	mars[5]=Uomega;
+	mars[6]=ppi;
+	mars[7]=M;
+	mars[8]=Lomega;
+}
+
+void Elliptic_Motion(daynum,planet)
+double daynum, planet[20];
+{
+	/* This function determines the geocentric model of each planet */
+	/* for any latitude and longitude on Earth.						*/
 	
-	lm=lm+dlm;
-	beta=beta+dbeta;
+	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
+	/* Pg. 82, 279 to 282 - Parallax Correction.					*/
+	/* Pg. 227 to 231 - Elliptic Motion (Second Method).			*/	
 	
-	dnut=Nutation(daynum);
+	
+	double a, e, i, Lomega, Uomega, M, n, ob, Px, Py, Pz, Qx, Qy, Qz, 
+	E, E0, E1, E2, nu, r, x, y, z, X, Y, Z, xsi, eta, xpi, planet_delta,
+	planet_az, planet_el, planet_ra, planet_dec, teg, jd, t, dnut, th,
+	h, u, S, C, dra, p;
+	
+	e=planet[3];
+	i=planet[4]*deg2rad;
+	Lomega=planet[8]*deg2rad;
+	Uomega=planet[5]*deg2rad;
+	M=planet[7];	
+	a=planet[2];
+	
+	n=0.9856076686/(a*sqrt(a));
+	
 	ob=Obliquity(daynum);
 	
-	lm=lm+dnut/3600.;
+	Px= cos(Lomega)*cos(Uomega)-sin(Lomega)*sin(Uomega)*cos(i);
+	Py= cos(ob)*(cos(Lomega)*sin(Uomega)+sin(Lomega)*cos(Uomega)*cos(i))
+	   -sin(ob)*sin(Lomega)*sin(i);
+	Pz= sin(ob)*(cos(Lomega)*sin(Uomega)+sin(Lomega)*cos(Uomega)*cos(i))
+	   +cos(ob)*sin(Lomega)*sin(i);
+	Qx=-sin(Lomega)*cos(Uomega)-cos(Lomega)*sin(Uomega)*cos(i);
+	Qy= cos(ob)*(cos(Lomega)*cos(Uomega)*cos(i)-sin(Lomega)*sin(Uomega))
+	   -sin(ob)*cos(Lomega)*sin(i);
+	Qz= sin(ob)*(cos(Lomega)*cos(Uomega)*cos(i)-sin(Lomega)*sin(Uomega))
+	   +cos(ob)*cos(Lomega)*sin(i);
 	
-	ra=atan2(sin(lm)*cos(ob)-tan(B)*sin(ob),cos(lm));
-	dec=asin(sin(B)*cos(ob)+cos(B)*sin(ob)*sin(lm));
-	
-	/* ra = right ascension */
-	/* dec = declination */
+	E0=M*deg2rad;
+	M=M*deg2rad;
+	do
+	{
+		E1=M+e*sin(E0);
+		E2=E0;
+		E0=E1;
+	} while( fabs(E2-E0) > 1E-6);
+	E=E1;
 
+	nu=2.*atan2(sqrt(1.+e)*tan(E/2.),sqrt(1.-e));
+	r=a*(1.-e*cos(E));
+
+	x=r*(Px*cos(nu)+Qx*sin(nu));
+	y=r*(Py*cos(nu)+Qy*sin(nu));
+	z=r*(Pz*cos(nu)+Qz*sin(nu));
+	
+	X=solar_coord[1];
+	Y=solar_coord[2];
+	Z=solar_coord[3];
+
+	xsi=X+x;
+	eta=Y+y;
+	xpi=Z+z;
+	
+	planet_delta=sqrt(xsi*xsi+eta*eta+xpi*xpi);
+	
+	planet_ra=atan2(eta,xsi);
+	planet_dec=atan2(xpi,sqrt(xsi*xsi+eta*eta));
+	
+	if (planet_ra<0.)
+		planet_ra+=pi;
+	
 	n=qth.stnlat*deg2rad;    /* North latitude of tracking station */
 	e=-qth.stnlong*deg2rad;  /* East longitude of tracking station */
 
 	/* Find siderial time in radians */
+	jd=daynum+2444238.5;
+	t=(jd-2451545.0)/36525.0;
 	teg=280.46061837+360.98564736629*(jd-2451545.0)+
 		(0.000387933*t-t*t/38710000.0)*t;
 	dnut=Nutation(daynum);
@@ -4805,7 +4812,7 @@ double daynum, L, B, R, L1, B1, R1;
 		teg+=360.0;
 
 	th=FixAngle((teg-qth.stnlong)*deg2rad);
-	h=th-ra;
+	h=th-planet_ra;
 
 	/* Parallax Correction */
 	/* Pg. 82, 279 - 282 - Astronomical Algorithms by Jean Meeus	*/
@@ -4813,23 +4820,65 @@ double daynum, L, B, R, L1, B1, R1;
 	S=0.99664719*sin(u)+qth.stnlat*sin(qth.stnlat*deg2rad)/6378140.;
 	C=cos(u)+qth.stnlat*cos(qth.stnlat*deg2rad)/6378140.;
 
-	dra=-C*sin(p)*sin(h)/(cos(dec)-C*sin(p)*cos(h));
-	dec=(sin(dec)-S*sin(p))*cos(dra)/(cos(dec)-C*sin(p)*cos(h));
-	ra=ra+dra;
+	dra=-C*sin(p)*sin(h)/(cos(planet_dec)-C*sin(p)*cos(h));
+	planet_dec=(sin(planet_dec)-S*sin(p))*cos(dra)/(cos(planet_dec)
+		-C*sin(p)*cos(h));
+	planet_ra=planet_ra+dra;
 
-	az=atan2(sin(h),cos(h)*sin(n)-tan(dec)*cos(n))+pi;
-	el=asin(sin(n)*sin(dec)+cos(n)*cos(dec)*cos(h));
+	planet_az=atan2(sin(h),cos(h)*sin(n)-tan(planet_dec)*cos(n))+pi;
+	planet_el=asin(sin(n)*sin(planet_dec)+cos(n)*cos(planet_dec)*cos(h));
 	
-	/* Correction to adjust for atmospheric refraction 			*/
-	/* Pg. 105 - 108 - Astronomical Algorithms by Jean Meeus	*/
-	if (el>15.*deg2rad)
-	{
-		el=el+((58.267*tan(pi/2.-el)-0.0824*pow(tan(pi/2.-el),3.))/3600.)*deg2rad;
-	}
+	planet_az=planet_az*rad2deg;
+	planet_el=planet_el*rad2deg;
+	planet_ra=planet_ra*rad2deg/15.;
+	planet_dec=planet_dec*rad2deg;
+	planet_delta=planet_delta;
 	
-	planet_az=az/deg2rad;
-	planet_el=el/deg2rad;
+	planet[ 9]=planet_az;
+	planet[10]=planet_el;
+	planet[11]=planet_ra;
+	planet[12]=planet_dec;
+	planet[13]=planet_delta;
 	
+}
+
+void Solar_Coordinates(daynum)
+double daynum;
+{
+	/* This function determines the geocentric position of the sun  */
+	/* from using a revised list of coeficients from VSOP87 theory.	*/
+	
+	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
+	/* Pg. 163 to 169 - Solar Coordinates (Higher Accuracy).		*/	
+	
+	double jd, t, T, epislon, nutation, L, B, R, cdot, beta, 
+	lambda_prime;
+	
+	jd=daynum+2444238.5;
+	
+	t=(jd-2451545.0)/365250.0;
+	T=10.*t;
+		
+	Earth(daynum);
+	epislon=Obliquity(daynum);
+	nutation=Nutation(daynum)*deg2rad;
+	
+	L=earth[1];
+	B=earth[2];
+	R=earth[3];
+	
+	cdot=L+pi;
+	beta=-B;
+	
+	lambda_prime=cdot-(1.397*T+0.00031*T*T)*deg2rad;
+	cdot=cdot-0.09033/3600.*deg2rad;
+	cdot=cdot+nutation-20.4898/(3600.*R)*deg2rad;
+	beta=beta+0.03916*(cos(lambda_prime)-sin(lambda_prime))/3600.*deg2rad;
+	
+	solar_coord[1]=R*cos(beta)*cos(cdot);
+	solar_coord[2]=R*(cos(beta)*sin(cdot)*cos(epislon)-sin(beta)*sin(epislon));
+	solar_coord[3]=R*(cos(beta)*sin(cdot)*sin(epislon)+sin(beta)*cos(epislon));
+
 }
 
 void Illuminated_Fraction_of_Moon(daynum)
@@ -7566,25 +7615,41 @@ void planets()
 	//printw("                                                                                ");
 
 	attrset(COLOR_PAIR(2)|A_REVERSE);
-	printw(" Planet  | Az | El | RA | Dec | %s | %s | Distance 6789612345678971234567898",(io_lat=='N'?"LatN":"LatS"),(io_lon=='W'?"LonW":"LonE"),(io_lat=='N'?"LatN":"LatS"),(io_lon=='W'?"LonW":"LonE"));
-	printw("12345678901234567892123456789312345678941234567895123456789612345678971234567898");
+	mvprintw(2,0," Planet  |  Az   |   El  |  RA  |  Dec  | Range (AU) |");
 	attrset(COLOR_PAIR(2));
 	
 	do
 	{
 		attrset(COLOR_PAIR(2));
-		mvprintw(5,1,"Mercury ");
-		mvprintw(6,1,"Venus   ");
+		mvprintw(4,1,"Mercury ");
+		mvprintw(5,1,"Venus   ");
+//		mvprintw(6,1,"Earth   ");
 		mvprintw(7,1,"Mars    ");
 		mvprintw(8,1,"Jupiter ");
 		mvprintw(9,1,"Saturn  ");
 		mvprintw(10,1,"Uranus  ");
 		mvprintw(11,1,"Neptune ");
 		mvprintw(12,1,"Pluto   ");
+		mvprintw(14,1,"Solar Cd");
 
 		daynum=CurrentDaynum();
 		PreCalc(1);
 		Calc();
+		
+		Solar_Coordinates(daynum);
+		Mercury(daynum);
+		Venus(daynum);
+		Earth(daynum);
+		Mars(daynum);
+		
+		Elliptic_Motion(daynum,mercury);
+		Elliptic_Motion(daynum,venus);
+		Elliptic_Motion(daynum,mars);
+
+		mvprintw(4,10,"%5.2f  %6.3f  %6.3f  %6.3f %5.4f",mercury[9],mercury[10],mercury[11],mercury[12],mercury[13]);
+		mvprintw(5,10,"%5.2f  %6.3f  %6.3f  %6.3f %5.4f",venus[9],venus[10],venus[11],venus[12],venus[13]);
+		mvprintw(7,10,"%5.2f  %6.3f  %6.3f  %6.3f %5.4f",mars[9],mars[10],mars[11],mars[12],mars[13]);
+
 
 		FindSun(daynum);
 		sprintf(tracking_mode,"MULTI\n%c",0);
