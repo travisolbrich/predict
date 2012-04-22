@@ -1454,7 +1454,13 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		vel->y=rdot*uy+rvdot*vy;
 		vel->z=rdot*uz+rvdot*vz;
 		
-		phase=0;
+		/* Phase in radians */
+		phase=xlamb-xnodes-omgasm+twopi;
+		
+		if (phase<0.0)
+			phase+=twopi;
+
+		phase=FMod2p(phase);
 }
 
 void Deep(int ientry, tle_t * tle, deep_arg_t * deep_arg)
@@ -2405,7 +2411,13 @@ void SDP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	vel->y=rdot*uy+rvdot*vy;
 	vel->z=rdot*uz+rvdot*vz;
 	
-	phase=0;
+	/* Phase in radians */
+	phase=xlamb-deep_arg.xnode-deep_arg.omgadf+twopi;
+    
+	if (phase<0.0)
+		phase+=twopi;
+
+	phase=FMod2p(phase);
 }
 
 void Calculate_User_PosVel(double time, geodetic_t *geodetic, vector_t *obs_pos, vector_t *obs_vel)
