@@ -5088,7 +5088,7 @@ double daynum, planet[20];
 	Qy, Qz, E, E0, E1, nu, r, x, y, z, X, Y, Z, xsi, eta, xpi, 
 	planet_delta, planet_az, planet_el, planet_ra, planet_dec, R, 
 	elongation, phase_angle, magnitude, teg, jd, t, dnut, th, nl, 
-	h, u, S, C, dra, p, delta_M, delta_E;
+	h, u, S, C, dra, p, delta_M, delta_E, planet_vel;
 	
 	e=planet[3];
 	i=planet[4]*deg2rad;
@@ -5149,6 +5149,8 @@ double daynum, planet[20];
 	elongation=acos((R*R+planet_delta*planet_delta-r*r)/(2.*R*planet_delta));
 	phase_angle=acos((r*r+planet_delta*planet_delta-R*R)/(2.*r*planet_delta));
 	
+	planet_vel=42.1219*sqrt(1./r-1/(2.*a));
+	
 	nl=qth.stnlat*deg2rad;    /* North latitude of tracking station */
 	e=-qth.stnlong*deg2rad;  /* East longitude of tracking station */
 
@@ -5196,6 +5198,7 @@ double daynum, planet[20];
 	planet[14]=elongation;
 	planet[15]=phase_angle;
 	planet[16]=magnitude;
+	planet[17]=planet_vel;
 	
 }
 
@@ -7933,7 +7936,7 @@ void planets()
 	//printw("                                                                                ");
 
 	attrset(COLOR_PAIR(2)|A_REVERSE);
-	mvprintw(2,0," Planet  |  Az   |   El  |   RA   |  Dec  | Range (AU) |                        ");
+	mvprintw(2,0," Planet  |  Az   |   El  |   RA   |  Dec  | Range (AU) | Vel (km/s) |           ");
 	attrset(COLOR_PAIR(2));
 	
 	do
@@ -7941,8 +7944,6 @@ void planets()
 		attrset(COLOR_PAIR(2));
 
 		daynum=CurrentDaynum();
-		PreCalc(1);
-		Calc();
 		
 		Solar_Coordinates(daynum);
 		Mercury(daynum);
@@ -7969,98 +7970,98 @@ void planets()
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(4,1,"Mercury ");
-			mvprintw(4,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",mercury[9],mercury[10],mercury[11],mercury[12],mercury[13]);
+			mvprintw(4,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",mercury[9],mercury[10],mercury[11],mercury[12],mercury[13],mercury[17]);
 
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(4,1,"Mercury ");
-			mvprintw(4,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",mercury[9],mercury[10],mercury[11],mercury[12],mercury[13]);
+			mvprintw(4,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",mercury[9],mercury[10],mercury[11],mercury[12],mercury[13],mercury[17]);
 		};
 		if (venus[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(5,1,"Venus   ");
-			mvprintw(5,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",venus[9],venus[10],venus[11],venus[12],venus[13]);
+			mvprintw(5,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",venus[9],venus[10],venus[11],venus[12],venus[13],venus[17]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));			
 			mvprintw(5,1,"Venus   ");
-			mvprintw(5,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",venus[9],venus[10],venus[11],venus[12],venus[13]);
+			mvprintw(5,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",venus[9],venus[10],venus[11],venus[12],venus[13],venus[17]);
 		};
 		if (mars[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(6,1,"Mars    ");
-			mvprintw(6,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",mars[9],mars[10],mars[11],mars[12],mars[13]);
+			mvprintw(6,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",mars[9],mars[10],mars[11],mars[12],mars[13],mars[17]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(6,1,"Mars    ");
-			mvprintw(6,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",mars[9],mars[10],mars[11],mars[12],mars[13]);
+			mvprintw(6,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",mars[9],mars[10],mars[11],mars[12],mars[13],mars[17]);
 		};
 		if (jupiter[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(7,1,"Jupiter ");
-			mvprintw(7,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",jupiter[9],jupiter[10],jupiter[11],jupiter[12],jupiter[13]);
+			mvprintw(7,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",jupiter[9],jupiter[10],jupiter[11],jupiter[12],jupiter[13],jupiter[17]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(7,1,"Jupiter ");
-			mvprintw(7,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",jupiter[9],jupiter[10],jupiter[11],jupiter[12],jupiter[13]);
+			mvprintw(7,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",jupiter[9],jupiter[10],jupiter[11],jupiter[12],jupiter[13],jupiter[17]);
 		};
 		if (saturn[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(8,1,"Saturn  ");
-			mvprintw(8,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",saturn[9],saturn[10],saturn[11],saturn[12],saturn[13]);
+			mvprintw(8,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",saturn[9],saturn[10],saturn[11],saturn[12],saturn[13],jupiter[17]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(8,1,"Saturn  ");
-			mvprintw(8,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",saturn[9],saturn[10],saturn[11],saturn[12],saturn[13]);
+			mvprintw(8,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",saturn[9],saturn[10],saturn[11],saturn[12],saturn[13],saturn[17]);
 		};
 		if (uranus[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(9,1,"Uranus  ");
-			mvprintw(9,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",uranus[9],uranus[10],uranus[11],uranus[12],uranus[13]);
+			mvprintw(9,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",uranus[9],uranus[10],uranus[11],uranus[12],uranus[13],uranus[17]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(9,1,"Uranus  ");
-			mvprintw(9,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",uranus[9],uranus[10],uranus[11],uranus[12],uranus[13]);
+			mvprintw(9,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",uranus[9],uranus[10],uranus[11],uranus[12],uranus[13],uranus[17]);
 		};
 		if (neptune[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(10,1,"Neptune ");
-			mvprintw(10,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",neptune[9],neptune[10],neptune[11],neptune[12],neptune[13]);
+			mvprintw(10,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",neptune[9],neptune[10],neptune[11],neptune[12],neptune[13],neptune[17]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(10,1,"Neptune ");
-			mvprintw(10,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",neptune[9],neptune[10],neptune[11],neptune[12],neptune[13]);
+			mvprintw(10,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",neptune[9],neptune[10],neptune[11],neptune[12],neptune[13],neptune[17]);
 		};
 		if (pluto[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(11,1,"Pluto   ");
-			mvprintw(11,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",pluto[9],pluto[10],pluto[11],pluto[12],pluto[13]);
+			mvprintw(11,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",pluto[9],pluto[10],pluto[11],pluto[12],pluto[13],pluto[17]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(11,1,"Pluto   ");
-			mvprintw(11,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",pluto[9],pluto[10],pluto[11],pluto[12],pluto[13]);
+			mvprintw(11,10,"%6.2f %7.2f %7.2f %8.2f %9.3f %12.4f",pluto[9],pluto[10],pluto[11],pluto[12],pluto[13],pluto[17]);
 		};
 
 
@@ -8095,7 +8096,6 @@ void planets()
 	} while (ans!='q' && ans!=27);
 	
 	cbreak();
-
 }
 
 int QuickFind(string, outputfile)
