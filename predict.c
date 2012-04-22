@@ -177,7 +177,7 @@ double	tsince, jul_epoch, jul_utc, eclipse_depth=0,
 	
 //For planetary predictions	
 double  solar_coord[3], mercury[20], venus[20], earth[3], mars[20],
-	jupiter[20], saturn[20], uranus [20], neptune[20];
+	jupiter[20], saturn[20], uranus [20], neptune[20], pluto[20];
 
 char	qthfile[50], tlefile[50], dbfile[50], temp[80], output[25],
 	serial_port[15], resave=0, reload_tle=0, netport[6],
@@ -4319,6 +4319,42 @@ double Obliquity(double daynum)
 	return ob;
 }
 
+void Solar_Coordinates(daynum)
+double daynum;
+{
+	/* This function determines the geocentric position of the sun  */
+	/* from using a revised list of coeficients from VSOP87 theory.	*/
+	
+	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
+	/* Pg. 163 to 169 - Solar Coordinates (Higher Accuracy).		*/	
+	
+	double jd, t, T, epislon, nutation, L, B, R, cdot, beta, 
+	lambda_prime;
+	
+	jd=daynum+2444238.5;
+	
+	T=(jd-2451545.0)/36525.0;
+		
+	Earth(daynum);
+	epislon=Obliquity(daynum);
+	nutation=Nutation(daynum)*deg2rad;
+	
+	L=earth[1];
+	B=earth[2];
+	R=earth[3];
+	
+	cdot=L+pi;
+	beta=-B;
+	
+	lambda_prime=cdot-(1.397*T+0.00031*T*T)*deg2rad;
+	cdot=cdot-0.09033/3600.*deg2rad;
+	beta=beta+0.03916*(cos(lambda_prime)-sin(lambda_prime))/3600.*deg2rad;
+	
+	solar_coord[1]=R*cos(beta)*cos(cdot);
+	solar_coord[2]=R*(cos(beta)*sin(cdot)*cos(epislon)-sin(beta)*sin(epislon));
+	solar_coord[3]=R*(cos(beta)*sin(cdot)*sin(epislon)+sin(beta)*cos(epislon));
+}
+
 void Mercury(daynum)
 double daynum;
 {
@@ -4443,7 +4479,7 @@ double daynum;
 	/* Pg. 217 to 221 & App. III - Positions of the Planets.		*/	
 
 	double	jd, t, l0, l1, l2, l3, l4, b0, b1, b2, b3, b4, r0, r1, 
-	r2, r3, r4,	L_earth, B_earth, R_earth;
+	r2, r3, r4,	L_earth, B_earth, R_earth, L_prime, delta_L, delta_B;
 	
 	jd=daynum+2444238.5;
 	
@@ -4693,6 +4729,16 @@ double daynum;
 	L_earth=FixAngle(L_earth);
 	B_earth=FixAngle(B_earth);
 	
+	t=10.*t;
+	
+	L_prime=L_earth+(-1.397*t-0.00031*t*t)*deg2rad;
+	
+	delta_L=(-0.09033/3600.+0.03916/3600.*(cos(L_prime)+sin(L_prime))*tan(B_earth))*deg2rad;
+	delta_B=(0.03916*cos(L_prime)-sin(L_prime))/3600.*deg2rad;
+	
+	L_earth=L_earth+delta_L;
+	B_earth=B_earth+delta_B;
+	
 	earth[1]=L_earth;
 	earth[2]=B_earth;
 	earth[3]=R_earth;
@@ -4759,8 +4805,8 @@ double daynum;
 void Jupiter(daynum)
 double daynum;
 {
-	/* This function determines the orbital elements of Mars in a   */
-	/* heliocentric universe.									    */
+	/* This function determines the orbital elements of Jupiter in  */
+	/* a heliocentric universe.									    */
 	   
 	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
 	/* Pg. 209 to 216 - Elements of Planetary Orbits.				*/	
@@ -4816,13 +4862,13 @@ double daynum;
 void Saturn(daynum)
 double daynum;
 {
-	/* This function determines the orbital elements of Mars in a   */
+	/* This function determines the orbital elements of Saturn in a */
 	/* heliocentric universe.									    */
 	   
 	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
 	/* Pg. 209 to 216 - Elements of Planetary Orbits.				*/	
 	
-	double jd, t, L, a, e, i, Uomega, ppi, M, Lomega;
+	double jd, t, L, a, e, i, Uomega, lotp, M, Lomega;
 	
 	jd=daynum+2444238.5;
 	
@@ -4847,17 +4893,17 @@ double daynum;
 					  (-0.00018399*t*t)+
 					  ( 0.00000048*t*t*t);
 	
-	ppi=93.057237+(0.5665415*t)+
+	lotp=93.057237+(0.5665415*t)+
 				  (0.00052850*t*t)+
 				  (0.000004912*t*t*t);
 		
-	M=L-ppi;
-	Lomega=ppi-Uomega;
+	M=L-lotp;
+	Lomega=lotp-Uomega;
 	
 	L=PrimeAngle(L);
 	i=PrimeAngle(i);
 	Uomega=PrimeAngle(Uomega);
-	ppi=PrimeAngle(ppi);
+	lotp=PrimeAngle(lotp);
 	M=PrimeAngle(M);
 	Lomega=PrimeAngle(Lomega);
 	
@@ -4866,7 +4912,7 @@ double daynum;
 	saturn[3]=e;
 	saturn[4]=i;
 	saturn[5]=Uomega;
-	saturn[6]=ppi;
+	saturn[6]=lotp;
 	saturn[7]=M;
 	saturn[8]=Lomega;
 }
@@ -4874,7 +4920,7 @@ double daynum;
 void Uranus(daynum)
 double daynum;
 {
-	/* This function determines the orbital elements of Mars in a   */
+	/* This function determines the orbital elements of Uranus in a */
 	/* heliocentric universe.									    */
 	   
 	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
@@ -4932,13 +4978,13 @@ double daynum;
 void Neptune(daynum)
 double daynum;
 {
-	/* This function determines the orbital elements of Mars in a   */
-	/* heliocentric universe.									    */
+	/* This function determines the orbital elements of Neptune in  */
+	/* a heliocentric universe.									    */
 	   
 	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
 	/* Pg. 209 to 216 - Elements of Planetary Orbits.				*/	
 	
-	double jd, t, L, a, e, i, Uomega, ppi, M, Lomega;
+	double jd, t, L, a, e, i, Uomega, ppi, lotp, M, Lomega;
 	
 	jd=daynum+2444238.5;
 	
@@ -4963,7 +5009,7 @@ double daynum;
 	
 	ppi=48.120276+(0.0291866*t)+
 				  (0.00007610*t*t);
-		
+	
 	M=L-ppi;
 	Lomega=ppi-Uomega;
 	
@@ -4984,6 +5030,49 @@ double daynum;
 	neptune[8]=Lomega;
 }
 
+void Pluto(daynum)
+double daynum;
+{
+	/* This function determines the orbital elements of Pluto in a  */
+	/* heliocentric universe.									    */
+	   
+	/* Code is derrived from Astronomical Algorithms by Jean Meeus	*/
+	/* and NASA's planetary elements.								*/
+	/* Pg. 209 to 216 - Elements of Planetary Orbits.				*/	
+	
+	double jd, t, L, a, e, i, Uomega, ppi, lotp, M, Lomega;
+	
+	jd=daynum+2444238.5;
+	
+	t=(jd-2451545.0)/36525.0;
+
+	L=238.96535011+145.18042903*t;
+	a=39.48686035+0.00449751*t;
+	e=0.24885238+0.00006016*t;
+	i=17.14104260+0.00000501*t;
+	Uomega=110.30167986-0.00809981*t;
+	lotp=224.09702598-0.00968827*t;
+	
+	M=L-lotp-0.01262724;
+	Lomega=lotp-Uomega;
+	
+	L=PrimeAngle(L);
+	i=PrimeAngle(i);
+	Uomega=PrimeAngle(Uomega);
+	lotp=PrimeAngle(lotp);
+	M=PrimeAngle(M);
+	Lomega=PrimeAngle(Lomega);	
+	
+	pluto[1]=L;
+	pluto[2]=a;
+	pluto[3]=e;
+	pluto[4]=i;
+	pluto[5]=Uomega;
+	pluto[6]=lotp;
+	pluto[7]=M;
+	pluto[8]=Lomega;
+}
+
 void Elliptic_Motion(daynum,planet)
 double daynum, planet[20];
 {
@@ -4996,21 +5085,21 @@ double daynum, planet[20];
 	
 	
 	double a, e, i, Lomega, Uomega, M, n, ob, Px, Py, Pz, Qx, 
-	Qy, Qz, E, E0, E1, E2, nu, r, x, y, z, X, Y, Z, xsi, eta, xpi, 
+	Qy, Qz, E, E0, E1, nu, r, x, y, z, X, Y, Z, xsi, eta, xpi, 
 	planet_delta, planet_az, planet_el, planet_ra, planet_dec, R, 
 	elongation, phase_angle, magnitude, teg, jd, t, dnut, th, nl, 
-	h, u, S, C, dra, p;
+	h, u, S, C, dra, p, delta_M, delta_E;
 	
 	e=planet[3];
 	i=planet[4]*deg2rad;
 	Lomega=planet[8]*deg2rad;
 	Uomega=planet[5]*deg2rad;
-	M=planet[7];	
+	M=planet[7];
 	a=planet[2];
 		
 	n=0.9856076686/(a*sqrt(a));
 	
-	ob=Obliquity(daynum);
+	ob=23.43928*deg2rad;
 	
 	Px= cos(Lomega)*cos(Uomega)-sin(Lomega)*sin(Uomega)*cos(i);
 	Py= cos(ob)*(cos(Lomega)*sin(Uomega)+sin(Lomega)*cos(Uomega)*cos(i))
@@ -5023,14 +5112,16 @@ double daynum, planet[20];
 	Qz= sin(ob)*(cos(Lomega)*cos(Uomega)*cos(i)-sin(Lomega)*sin(Uomega))
 	   +cos(ob)*cos(Lomega)*sin(i);
 	
-	E0=FixAngle(M*deg2rad);
-	M=FixAngle(M*deg2rad);
+	E0=M*deg2rad;
+	M=M*deg2rad;
 	do
 	{
-		E1=E0+(M+e*sin(E0)-E0)/(1.-e*cos(E0));
-		E2=E0;
+		delta_M=M-(E0-e*sin(E0));
+		delta_E=delta_M/(1.-e*cos(E0));
+		E1=E0+delta_E;
 		E0=E1;
-	} while( fabs(E2-E1) > 1E-8);
+
+	} while( delta_E > 1E-6);
 	E=E1;
 
 	nu=2.*atan2(sqrt(1.+e)*tan(E/2.),sqrt(1.-e));
@@ -5039,7 +5130,7 @@ double daynum, planet[20];
 	x=r*(Px*cos(nu)+Qx*sin(nu));
 	y=r*(Py*cos(nu)+Qy*sin(nu));
 	z=r*(Pz*cos(nu)+Qz*sin(nu));
-	
+
 	X=solar_coord[1];
 	Y=solar_coord[2];
 	Z=solar_coord[3];
@@ -5051,15 +5142,12 @@ double daynum, planet[20];
 	planet_delta=sqrt(xsi*xsi+eta*eta+xpi*xpi);
 	
 	planet_ra=atan2(eta,xsi);
-	planet_dec=atan2(xpi,sqrt(xsi*xsi+eta*eta));
+	planet_dec=asin(xpi/planet_delta);
 	
 	R=sqrt(X*X+Y*Y+Z*Z);
 	
-	elongation=acos((xsi*X+eta*Y+xpi*Z)/(R*planet_delta));
-	phase_angle=acos((xsi*x+eta*y+xpi*z)/(r*planet_delta));
-	
-	if (planet_ra<0.)
-		planet_ra+=pi;
+	elongation=acos((R*R+planet_delta*planet_delta-r*r)/(2.*R*planet_delta));
+	phase_angle=acos((r*r+planet_delta*planet_delta-R*R)/(2.*r*planet_delta));
 	
 	nl=qth.stnlat*deg2rad;    /* North latitude of tracking station */
 	e=-qth.stnlong*deg2rad;  /* East longitude of tracking station */
@@ -5109,45 +5197,6 @@ double daynum, planet[20];
 	planet[15]=phase_angle;
 	planet[16]=magnitude;
 	
-}
-
-void Solar_Coordinates(daynum)
-double daynum;
-{
-	/* This function determines the geocentric position of the sun  */
-	/* from using a revised list of coeficients from VSOP87 theory.	*/
-	
-	/* Code is derrived from Astronomical Algorithms by Jean Meeus.	*/
-	/* Pg. 163 to 169 - Solar Coordinates (Higher Accuracy).		*/	
-	
-	double jd, t, T, epislon, nutation, L, B, R, cdot, beta, 
-	lambda_prime;
-	
-	jd=daynum+2444238.5;
-	
-	t=(jd-2451545.0)/365250.0;
-	T=10.*t;
-		
-	Earth(daynum);
-	epislon=Obliquity(daynum);
-	nutation=Nutation(daynum)*deg2rad;
-	
-	L=earth[1];
-	B=earth[2];
-	R=earth[3];
-	
-	cdot=L+pi;
-	beta=-B;
-	
-	lambda_prime=cdot-(1.397*T+0.00031*T*T)*deg2rad;
-	cdot=cdot-0.09033/3600.*deg2rad;
-	cdot=cdot+nutation-20.4898/(3600.*R)*deg2rad;
-	beta=beta+0.03916*(cos(lambda_prime)-sin(lambda_prime))/3600.*deg2rad;
-	
-	solar_coord[1]=R*cos(beta)*cos(cdot);
-	solar_coord[2]=R*(cos(beta)*sin(cdot)*cos(epislon)-sin(beta)*sin(epislon));
-	solar_coord[3]=R*(cos(beta)*sin(cdot)*sin(epislon)+sin(beta)*cos(epislon));
-
 }
 
 void Illuminated_Fraction_of_Moon(daynum)
@@ -7904,6 +7953,7 @@ void planets()
 		Saturn(daynum);
 		Uranus(daynum);
 		Neptune(daynum);
+		Pluto(daynum);
 		
 		Elliptic_Motion(daynum,mercury);
 		Elliptic_Motion(daynum,venus);
@@ -7912,92 +7962,107 @@ void planets()
 		Elliptic_Motion(daynum,saturn);
 		Elliptic_Motion(daynum,uranus);
 		Elliptic_Motion(daynum,neptune);
+		Elliptic_Motion(daynum,pluto);
+		
 
 		if (mercury[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(4,1,"Mercury ");
-			mvprintw(4,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",mercury[9],mercury[10],mercury[11],mercury[12],mercury[13]);
+			mvprintw(4,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",mercury[9],mercury[10],mercury[11],mercury[12],mercury[13]);
 
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(4,1,"Mercury ");
-			mvprintw(4,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",mercury[9],mercury[10],mercury[11],mercury[12],mercury[13]);
+			mvprintw(4,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",mercury[9],mercury[10],mercury[11],mercury[12],mercury[13]);
 		};
 		if (venus[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(5,1,"Venus   ");
-			mvprintw(5,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",venus[9],venus[10],venus[11],venus[12],venus[13]);
+			mvprintw(5,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",venus[9],venus[10],venus[11],venus[12],venus[13]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));			
 			mvprintw(5,1,"Venus   ");
-			mvprintw(5,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",venus[9],venus[10],venus[11],venus[12],venus[13]);
+			mvprintw(5,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",venus[9],venus[10],venus[11],venus[12],venus[13]);
 		};
 		if (mars[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(6,1,"Mars    ");
-			mvprintw(6,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",mars[9],mars[10],mars[11],mars[12],mars[13]);
+			mvprintw(6,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",mars[9],mars[10],mars[11],mars[12],mars[13]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(6,1,"Mars    ");
-			mvprintw(6,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",mars[9],mars[10],mars[11],mars[12],mars[13]);
+			mvprintw(6,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",mars[9],mars[10],mars[11],mars[12],mars[13]);
 		};
 		if (jupiter[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(7,1,"Jupiter ");
-			mvprintw(7,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",jupiter[9],jupiter[10],jupiter[11],jupiter[12],jupiter[13]);
+			mvprintw(7,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",jupiter[9],jupiter[10],jupiter[11],jupiter[12],jupiter[13]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(7,1,"Jupiter ");
-			mvprintw(7,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",jupiter[9],jupiter[10],jupiter[11],jupiter[12],jupiter[13]);
+			mvprintw(7,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",jupiter[9],jupiter[10],jupiter[11],jupiter[12],jupiter[13]);
 		};
 		if (saturn[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(8,1,"Saturn  ");
-			mvprintw(8,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",saturn[9],saturn[10],saturn[11],saturn[12],saturn[13]);
+			mvprintw(8,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",saturn[9],saturn[10],saturn[11],saturn[12],saturn[13]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(8,1,"Saturn  ");
-			mvprintw(8,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",saturn[9],saturn[10],saturn[11],saturn[12],saturn[13]);
+			mvprintw(8,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",saturn[9],saturn[10],saturn[11],saturn[12],saturn[13]);
 		};
 		if (uranus[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(9,1,"Uranus  ");
-			mvprintw(9,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",uranus[9],uranus[10],uranus[11],uranus[12],uranus[13]);
+			mvprintw(9,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",uranus[9],uranus[10],uranus[11],uranus[12],uranus[13]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(9,1,"Uranus  ");
-			mvprintw(9,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",uranus[9],uranus[10],uranus[11],uranus[12],uranus[13]);
+			mvprintw(9,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",uranus[9],uranus[10],uranus[11],uranus[12],uranus[13]);
 		};
 		if (neptune[10]>=0.0)
 		{
 			attrset(COLOR_PAIR(2)|A_BOLD);
 			mvprintw(10,1,"Neptune ");
-			mvprintw(10,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",neptune[9],neptune[10],neptune[11],neptune[12],neptune[13]);
+			mvprintw(10,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",neptune[9],neptune[10],neptune[11],neptune[12],neptune[13]);
 		}
 		else
 		{
 			attrset(COLOR_PAIR(2));
 			mvprintw(10,1,"Neptune ");
-			mvprintw(10,10,"%5.2f %8.2f %6.2f %8.2f %9.3f",neptune[9],neptune[10],neptune[11],neptune[12],neptune[13]);
+			mvprintw(10,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",neptune[9],neptune[10],neptune[11],neptune[12],neptune[13]);
 		};
+		if (pluto[10]>=0.0)
+		{
+			attrset(COLOR_PAIR(2)|A_BOLD);
+			mvprintw(11,1,"Pluto   ");
+			mvprintw(11,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",pluto[9],pluto[10],pluto[11],pluto[12],pluto[13]);
+		}
+		else
+		{
+			attrset(COLOR_PAIR(2));
+			mvprintw(11,1,"Pluto   ");
+			mvprintw(11,10,"%6.2f %8.2f %6.2f %8.2f %9.3f",pluto[9],pluto[10],pluto[11],pluto[12],pluto[13]);
+		};
+
 
 		FindSun(daynum);
 		sprintf(tracking_mode,"MULTI\n%c",0);
