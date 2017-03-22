@@ -802,8 +802,8 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		po=ao*(1.-tle->eo*tle->eo);
 		qo=ao*(1.-tle->eo);
 		xlo=tle->xmo+tle->omegao+tle->xnodeo;
-		d1o=c3*sinio*cosio;
-		d2o=c2*(7.*cosio*sinio-1.);
+		d1o=c3*sinio*sinio;
+		d2o=c2*(7.*cosio*cosio-1.);
 		d3o=c1*cosio;
 		d4o=d3o*sinio;
 		po2no=tle->xno/(po*po);
