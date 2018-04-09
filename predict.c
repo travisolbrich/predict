@@ -1033,7 +1033,14 @@ void SGP4(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		xmcof=-tothrd*coef*tle->bstar*ae/eeta;
 		xnodcf=3.5*betao2*xhdot1*c1;
 		t2cof=1.5*c1;
-		xlcof=0.125*a3ovk2*sinio*(3+5*cosio)/(1+cosio);
+		// BUGFIX:  Divide by zero for xincl = 180 deg.
+		if (fabs(1.+cosio) > e6a) {
+			xlcof = 0.125*a3ovk2*sinio*(3.+5.*cosio)/(1.+cosio);
+		}
+		else {
+			xlcof = 0.125*a3ovk2*sinio*(3.+5.*cosio)/e6a;
+		}
+		// END BUGFIX.
 		aycof=0.25*a3ovk2*sinio;
 		delmo=pow(1+eta*cos(tle->xmo),3);
 		sinmo=sin(tle->xmo);
@@ -1129,7 +1136,16 @@ void SGP4(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	temp3=1/(1+betal);
 	cosu=temp2*(cosepw-axn+ayn*esine*temp3);
 	sinu=temp2*(sinepw-ayn-axn*esine*temp3);
-	u=AcTan(sinu,cosu);
+	// BUGFIX: From GSFC.  ORIG:  u = AcTan(sinu,cosu);
+	if (sinu != 0.0 || cosu != 0.0) {
+		u = AcTan(sinu,cosu);
+		if (u < 0.) {
+			u += twopi;
+		}
+	}
+	else {
+		u = 0.;
+	}
 	sin2u=2*sinu*cosu;
 	cos2u=2*cosu*cosu-1;
 	temp=1/pl;
