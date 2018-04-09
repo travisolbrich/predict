@@ -2061,6 +2061,14 @@ void SDP4(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		deep_arg.xnodot=xhdot1+(0.5*temp2*(4-19*deep_arg.theta2)+2*temp3*(3-7*deep_arg.theta2))*deep_arg.cosio;
 		xnodcf=3.5*deep_arg.betao2*xhdot1*c1;
 		t2cof=1.5*c1;
+		//BUGFIX:  Divide by zero for xincl = 180 deg.
+		if (fabs(1.+deep_arg.cosio) > e6a) {
+			xlcof = 0.125*a3ovk2*deep_arg.sinio*(3.+5.*deep_arg.cosio)/(1.+deep_arg.cosio);
+		}
+		else {
+			xlcof = 0.125*a3ovk2*deep_arg.sinio*(3.+5.*deep_arg.cosio)/e6a;
+		}
+		//END BUGFIX
 		xlcof=0.125*a3ovk2*deep_arg.sinio*(3+5*deep_arg.cosio)/(1+deep_arg.cosio);
 		aycof=0.25*a3ovk2*deep_arg.sinio;
 		x7thm1=7*deep_arg.theta2-1;
@@ -2147,7 +2155,17 @@ void SDP4(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 	temp3=1/(1+betal);
 	cosu=temp2*(cosepw-axn+ayn*esine*temp3);
 	sinu=temp2*(sinepw-ayn-axn*esine*temp3);
-	u=AcTan(sinu,cosu);
+	// BUGFIX: From GSFC.  ORIG:  u = AcTan(sinu,cosu);
+	if (sinu != 0.0 || cosu != 0.0) {
+		u = AcTan(sinu,cosu);
+		if (u < 0.) {
+			u += twopi;
+		}
+	}
+	else {
+		u = 0.;
+	}
+	// END BUGFIX
 	sin2u=2*sinu*cosu;
 	cos2u=2*cosu*cosu-1;
 	temp=1/pl;
