@@ -1241,7 +1241,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		xgdt1=-.5*pardt1*unm5th;
 		xhdt1=-pardt1*cosio;
 		xlldot=xnodp+xmdot1+.0625*pardt2*betao*(13.-78.*theta2+137.*theta4);
-		omgdot=xgdt1+.0625*pardt2*(7.-114.*theta2+395.*theta4)+pardt4*(3.-36.*theta2*49.*theta4);
+		omgdot=xgdt1+.0625*pardt2*(7.-114.*theta2+395.*theta4)+pardt4*(3.-36.*theta2+49.*theta4);
 		xnodot=xhdt1+(.5*pardt2*(4.-19.*theta2)+2.*pardt4*(3.-7.*theta2))*cosio;
 		tsi=1./(po-s);
 		eta=tle->eo*s*tsi;
@@ -1269,7 +1269,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		/* the equations are truncated to linear variation   */
 		/* in mean motion and quadratic variation in mean    */
 		/* anomaly.											 */
-		if (fabs(xndt*xmnpda)<=2.16E-3)
+		if (fabs(xndt*xmnpda)<2.16E-3)
 		{
 			SetFlag(SIMPLE_FLAG);
 			edot=-tothrd*xndtn*(1.-tle->eo);
@@ -1288,10 +1288,10 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 			etdt=(edot+tle->eo*tsdtts)*tsi*s;
 			psdtps=-eta*etdt*psim2;
 			sin2g=2.*sing*cosg;
-			codtco=d2o+2.*tsdtts-aldtal-7.*psdtps;
+			codtco=d2o+4.*tsdtts-aldtal-7.*psdtps;
 			c1dtc1=xndtn+4.*aldtal+codtco;
 			d9=eta*(6.+68.*eosq)+tle->eo*(20.+15.*eta2);
-			d1o=.5*eta*(4.*eta2)+tle->eo*(17.+68.*eta2);
+			d1o=.5*eta*(4.+eta2)+tle->eo*(17.+68.*eta2);
 			d11=eta*(72.+18.*eta2);
 			d12=eta*(30.+10.*eta2);
 			d13=5.+11.25*eta2;
@@ -1338,7 +1338,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 					cos2g+
 						b3*((d5dt*d14+d5*(d18-2.*d19))*
 				d4+2.*d4dt*d5dt+d5*(etddt*d13+22.5*eta*d23))*sing+xgdt1*
-					((7.*d2o*4.*tle->eo*edot/betao2)*
+					((7.*d2o+4.*tle->eo*edot/betao2)*
 					(c5*cosg-2.*c4*sin2g)
 					+((2.*c5dt*cosg-4.*c4dt*sin2g)-xgdt1*(c5*sing+4.*
 					c4*cos2g))));
@@ -1369,7 +1369,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 			temp1=pow(temp,pp);
 			xn=xnodp+xnd*(1.-temp1);
 			em=tle->eo+ed*(1.-pow(temp,qq));
-			z1=xnd*(tsince+ovgpp*(temp*temp1-1));
+			z1=xnd*(tsince+ovgpp*(temp*temp1-1.));
 		}
 		z7=3.5*tothrd*z1/xnodp;
 		xmam=FMod2p(xmam+z1+z7*xmdot1);
@@ -1409,7 +1409,7 @@ void SGP8(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		snfg=snf*cosos+csf*sinos;
 		csfg=csf*cosos-snf*sinos;
 		sn2f2g=2.*snfg*csfg;
-		cs2f2g=2.*pow(csfg,2)-1;
+		cs2f2g=2.*pow(csfg,2)-1.;
 		ecosf=em*csf;
 		g1o=fm-xmam+em*snf;
 		rm=pm/(1.+ecosf);
