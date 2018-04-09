@@ -872,7 +872,17 @@ void SGP(double tsince, tle_t * tle, vector_t * pos, vector_t * vel)
 		temp=esine/(1.+sqrt(1.-el2));
 		sinu=a/r*(sineo1-aynsl-axnsl*temp);
 		cosu=a/r*(coseo1-aynsl+axnsl*temp);
-		su=AcTan(sinu,cosu);
+		// BUGFIX: From JPL SGP4 Code.  ORIG:  su = AcTan(sinu,cosu);
+		if (sinu != 0.0 || cosu != 0.0) {
+			su = AcTan(sinu,cosu);
+			if (u < 0.) {
+				su += twopi;
+			}
+		}
+		else {
+			su = 0.;
+		}
+		// END BUGFIX
 		
 		/* Update for short periodics */
 		sin2u=(cosu+cosu)*sinu;
